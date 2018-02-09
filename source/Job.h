@@ -12,12 +12,15 @@
 
 #include <atomic>
 
-namespace JobSystemTests {
+namespace JobSystemTests
+{
 class JobSystemManagerTests;
 }
 
-namespace JobBot {
-enum struct JobType {
+namespace JobBot
+{
+enum struct JobType
+{
   Tiny,
   Huge,
   IO,
@@ -28,15 +31,6 @@ enum struct JobType {
   Null = -1
 };
 
-constexpr unsigned char JOB_FLAG_MASK_TINY = 0b00000001;
-constexpr unsigned char JOB_FLAG_MASK_HUGE = 0b00000010;
-constexpr unsigned char JOB_FLAG_MASK_IO = 0b00000100;
-constexpr unsigned char JOB_FLAG_MASK_GRAPHICS = 0b00001000;
-constexpr unsigned char JOB_FLAG_MASK_IMPORTANT = 0b00010000;
-
-constexpr unsigned char JOB_FLAG_MASK_STATUS_IN_PROGRESS = 0b10000000;
-constexpr unsigned char JOB_FLAG_MASK_STATUS_CANCELLED = 0b01000000;
-
 /*
     Forward declaration so that JobFunction typedef can happen
 */
@@ -45,27 +39,29 @@ class Job;
 /*
     Define JobFunction pointers to make declarations of Jobs much tidier
 */
-typedef void (*JobFunctionPointer)(Job *);
+typedef void (*JobFunctionPointer)(Job*);
 
-struct JobFunction {
+struct JobFunction
+{
   JobFunction(JobFunctionPointer func, JobType type = JobType::Misc);
 
   JobFunctionPointer function = nullptr;
-  unsigned char flags = 0;
+  unsigned char flags         = 0;
 };
 
 #pragma pack(push, 1)
-class Job {
+class Job
+{
 public:
   /*
       Allocate memory for a job, giving it a function
   */
-  static Job *Create(JobFunction &function);
+  static Job* Create(JobFunction& function);
 
   /*
       Allocate memory for a job, giving it a function and a parent
   */
-  static Job *CreateChild(JobFunction &function, Job *parent);
+  static Job* CreateChild(JobFunction& function, Job* parent);
 
   /*
       Allocate memory for a job, giving it a function and some data.
@@ -78,10 +74,8 @@ public:
       These functions will cause a compilation failure if your data is
       too large to fit within a job itself.
   */
-  template <typename T>
-  static Job *Create(JobFunction &function, const T &data);
-  template <typename T>
-  static Job *CreateChild(JobFunction &function, const T &data, Job *parent);
+  template <typename T> static Job* Create(JobFunction& function, const T& data);
+  template <typename T> static Job* CreateChild(JobFunction& function, const T& data, Job* parent);
 
   /*
       Execute this job
@@ -103,6 +97,16 @@ public:
   void SetCallback(JobFunction func);
 
   /*
+      Does this job match the given type?
+  */
+  bool MatchesType(JobType type) const;
+
+  /*
+    Is this job currently in progress
+  */
+  bool InProgress() const;
+
+  /*
       Associate some data with the job. This data cannot be type
       checked when it is accessed, so make sure that the expected
       types are well documented.
@@ -112,7 +116,7 @@ public:
 
       data - the data to put in the jobs storage space
   */
-  template <typename T> void SetData(const T &data);
+  template <typename T> void SetData(const T& data);
 
   /*
       Retrive the associated data that is stored with this job.
@@ -122,20 +126,18 @@ public:
       Recommend using a struct for multiple arguments. This should
       be smaller than PADDING_BYTES (checked with a static assert).
   */
-  template <typename T> T &GetData();
+  template <typename T> T& GetData();
 
   // Size that we want jobs to be
   static constexpr size_t TARGET_JOB_SIZE = 128;
   // Amount of data within a job
-  static constexpr size_t PAYLOAD_SIZE =
-      2 * sizeof(JobFunctionPointer) + sizeof(std::atomic_int) + sizeof(Job *) +
-      sizeof(std::atomic_char) + sizeof(unsigned char);
+  static constexpr size_t PAYLOAD_SIZE = 2 * sizeof(JobFunctionPointer) + sizeof(std::atomic_int) + sizeof(Job*) +
+                                         sizeof(std::atomic_char) + sizeof(unsigned char);
   // Amount of bytes to add in order to reach target size
   static constexpr size_t PADDING_BYTES = TARGET_JOB_SIZE - PAYLOAD_SIZE;
 
   // Fail to compile if trying to add negative
-  static_assert(PAYLOAD_SIZE < TARGET_JOB_SIZE,
-                "Job size exceeds target job size");
+  static_assert(PAYLOAD_SIZE < TARGET_JOB_SIZE, "Job size exceeds target job size");
 
 #ifdef _DEBUG
   // Need access to private function to reset UnfinishedJobCount for testing
@@ -163,11 +165,6 @@ public:
   */
   bool GetCompletable() const;
 
-  /*
-      Access the flag bits for this flag
-  */
-  unsigned char GetFlags() const;
-
 private:
   // Function that contains the actual job behavior
   JobFunctionPointer jobFunc_;
@@ -179,7 +176,7 @@ private:
   std::atomic_int unfinishedJobs_;
 
   // Parent of this job
-  Job *parent_;
+  Job* parent_;
 
   // Number of other parts of code that need this job to remain 'alive'
   std::atomic_char ghostJobCount_;
@@ -220,12 +217,12 @@ private:
       function - the function to run as this job
       parent - this job's parent (optional)
   */
-  Job(JobFunction function, Job *parent = nullptr);
+  Job(JobFunction function, Job* parent = nullptr);
 
   /*
       Assignment operator for the job systems 'memory manager' to use
   */
-  Job &operator=(const Job &job);
+  Job& operator=(const Job& job);
 
   // Amount of jobs for which memory should be preallocated
   // 2^16 is the maximum amount used in stress testing, but can easily be
@@ -241,87 +238,91 @@ private:
 };
 #pragma pack(pop)
 
-struct IOJobFunction : public JobFunction {
+struct IOJobFunction : public JobFunction
+{
   IOJobFunction(JobFunctionPointer func);
 };
 
-struct TinyJobFunction : public JobFunction {
+struct TinyJobFunction : public JobFunction
+{
   TinyJobFunction(JobFunctionPointer func);
 };
 
-struct HugeJobFunction : public JobFunction {
+struct HugeJobFunction : public JobFunction
+{
   HugeJobFunction(JobFunctionPointer func);
 };
 
-struct GraphicsJobFunction : public JobFunction {
+struct GraphicsJobFunction : public JobFunction
+{
   GraphicsJobFunction(JobFunctionPointer func);
 };
 
-struct ImportantJobFunction : public JobFunction {
+struct ImportantJobFunction : public JobFunction
+{
   ImportantJobFunction(JobFunctionPointer func);
 };
 
-template <typename T>
-inline Job *Job::Create(JobFunction &function, const T &data) {
-  Job *job = Create(function);
+template <typename T> inline Job* Job::Create(JobFunction& function, const T& data)
+{
+  Job* job = Create(function);
   job->SetData<T>(data);
   return job;
 }
 
-template <typename T>
-inline Job *Job::CreateChild(JobFunction &function, const T &data,
-                             Job *parent) {
-  Job *job = CreateChild(function, parent);
+template <typename T> inline Job* Job::CreateChild(JobFunction& function, const T& data, Job* parent)
+{
+  Job* job = CreateChild(function, parent);
   job->SetData<T>(data);
   return job;
 }
 
-template <typename T> inline void Job::SetData(const T &data) {
+template <typename T> inline void Job::SetData(const T& data)
+{
   // Verify that the data will fit in the allocated space
-  static_assert(sizeof(T) <= PADDING_BYTES,
-                "Job data too large, recommend passing by pointer");
+  static_assert(sizeof(T) <= PADDING_BYTES, "Job data too large, recommend passing by pointer");
 
   // Put the data in the padding bytes
-  *reinterpret_cast<T *>(padding_) = data;
+  *reinterpret_cast<T*>(padding_) = data;
 }
-template <typename T> inline T &Job::GetData() {
+template <typename T> inline T& Job::GetData()
+{
   // Verify that the requested data is small enough to be in the padding space
-  static_assert(sizeof(T) <= PADDING_BYTES,
-                "Job data too large, recommend passing by pointer");
+  static_assert(sizeof(T) <= PADDING_BYTES, "Job data too large, recommend passing by pointer");
 
   // Get the data from the padding bytes
-  return *reinterpret_cast<T *>(padding_);
+  return *reinterpret_cast<T*>(padding_);
 }
 }
 
-#define DECLARE_JOB(JobName)                                                   \
-  void JobName##Func(JobBot::Job *job);                                        \
-  JobBot::JobFunction JobName(JobName##Func);                                  \
-  void JobName##Func(JobBot::Job *job)
+#define DECLARE_JOB(JobName)                                                                                           \
+  void JobName##Func(JobBot::Job* job);                                                                                \
+  JobBot::JobFunction JobName(JobName##Func);                                                                          \
+  void JobName##Func(JobBot::Job* job)
 
-#define DECLARE_IO_JOB(JobName)                                                \
-  void JobName##Func(JobBot::Job *job);                                        \
-  JobBot::IOJobFunction JobName(JobName##Func);                                \
-  void JobName##Func(JobBot::Job *job)
+#define DECLARE_IO_JOB(JobName)                                                                                        \
+  void JobName##Func(JobBot::Job* job);                                                                                \
+  JobBot::IOJobFunction JobName(JobName##Func);                                                                        \
+  void JobName##Func(JobBot::Job* job)
 
-#define DECLARE_TINY_JOB(JobName)                                              \
-  void JobName##Func(JobBot::Job *job);                                        \
-  JobBot::TinyJobFunction JobName(JobName##Func);                              \
-  void JobName##Func(JobBot::Job *job)
+#define DECLARE_TINY_JOB(JobName)                                                                                      \
+  void JobName##Func(JobBot::Job* job);                                                                                \
+  JobBot::TinyJobFunction JobName(JobName##Func);                                                                      \
+  void JobName##Func(JobBot::Job* job)
 
-#define DECLARE_HUGE_JOB(JobName)                                              \
-  void JobName##Func(JobBot::Job *job);                                        \
-  JobBot::HugeJobFunction JobName(JobName##Func);                              \
-  void JobName##Func(JobBot::Job *job)
+#define DECLARE_HUGE_JOB(JobName)                                                                                      \
+  void JobName##Func(JobBot::Job* job);                                                                                \
+  JobBot::HugeJobFunction JobName(JobName##Func);                                                                      \
+  void JobName##Func(JobBot::Job* job)
 
-#define DECLARE_GRAPHICS_JOB(JobName)                                          \
-  void JobName##Func(JobBot::Job *job);                                        \
-  JobBot::GraphicsJobFunction JobName(JobName##Func);                          \
-  void JobName##Func(JobBot::Job *job)
+#define DECLARE_GRAPHICS_JOB(JobName)                                                                                  \
+  void JobName##Func(JobBot::Job* job);                                                                                \
+  JobBot::GraphicsJobFunction JobName(JobName##Func);                                                                  \
+  void JobName##Func(JobBot::Job* job)
 
-#define DECLARE_IMPORTANT_JOB(JobName)                                         \
-  void JobName##Func(JobBot::Job *job);                                        \
-  JobBot::ImportantJobFunction JobName(JobName##Func);                         \
-  void JobName##Func(JobBot::Job *job)
+#define DECLARE_IMPORTANT_JOB(JobName)                                                                                 \
+  void JobName##Func(JobBot::Job* job);                                                                                \
+  JobBot::ImportantJobFunction JobName(JobName##Func);                                                                 \
+  void JobName##Func(JobBot::Job* job)
 
 #endif

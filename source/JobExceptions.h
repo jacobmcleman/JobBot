@@ -11,21 +11,28 @@ All content copyright 2017 DigiPen (USA) Corporation, all rights reserved.
 
 #include <exception>
 
-namespace JobBot {
+namespace JobBot
+{
 // Forward declaration of Job class
 class Job;
 
-class JobRejected : public std::exception {
+class JobRejected : public std::exception
+{
 public:
   // Descriptor for why the job was rejected
-  enum struct FailureType { QueueFull, NullJob, Unknown };
+  enum struct FailureType
+  {
+    QueueFull,
+    NullJob,
+    Unknown
+  };
 
   /*
       Constructor
       mode - Why the job was rejected
       job - The job that was rejected
   */
-  JobRejected(FailureType mode, Job *job);
+  JobRejected(FailureType mode, Job* job);
 
   /*
       Destructor
@@ -36,7 +43,7 @@ public:
       Gives back a string to say what went wrong in case
       anyone is interested
   */
-  virtual const char *what() const throw();
+  virtual const char* what() const throw();
 
   /*
       General type of failure
@@ -46,11 +53,11 @@ public:
   /*
       Get the job that caused this whole mess
   */
-  Job *GetJob() const;
+  Job* GetJob() const;
 
 private:
   FailureType mode_;
-  Job *guiltyJob_;
+  Job* guiltyJob_;
 };
 }
 #endif

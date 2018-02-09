@@ -1,3 +1,1 @@
-cmake -DCMAKE_CSS_COMPILER=clang++
-cmake -H. -Bbuild
-
+cmake - DCMAKE_CSS_COMPILER = clang++ cmake - H.- Bbuild

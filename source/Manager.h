@@ -19,8 +19,10 @@
 #include "JobExceptions.h"
 #include "Worker.h"
 
-namespace JobBot {
-class Manager {
+namespace JobBot
+{
+class Manager
+{
 public:
   /*
       Create a manager with the given number of workers
@@ -38,22 +40,22 @@ public:
   /*
       Throw a job at the workers for them to complete
   */
-  bool SubmitJob(Job *job);
+  bool SubmitJob(Job* job);
 
   /*
       Get a worker based on its thread ID
   */
-  Worker *GetWorkerByThreadID(std::thread::id id);
+  Worker* GetWorkerByThreadID(std::thread::id id);
 
   /*
       Get the worker who's thread ID matches the current thread
   */
-  Worker *GetThisThreadsWorker();
+  Worker* GetThisThreadsWorker();
 
   /*
       Get a random worker (for stealing/assigning jobs)
   */
-  Worker *GetRandomWorker();
+  Worker* GetRandomWorker();
 
   /*
       Get the worker that currently has the longest
@@ -62,29 +64,29 @@ public:
       Guaranteed to always return a valid worker, but that
       worker may have an empty queue
   */
-  Worker *GetBusiestWorker();
+  Worker* GetBusiestWorker();
 
   /*
       Get the shared instance of the Manager
   */
-  static Manager *GetInstance();
+  static Manager* GetInstance();
 
   /*
       Add a job to the singleton manager instance
   */
-  static void RunJob(Job *job);
+  static void RunJob(Job* job);
 
   /*
       Tell this threads worker to work while waiting for a job
 
       Will block until job is complete
   */
-  static void WaitForJob(Job *job);
+  static void WaitForJob(Job* job);
 
   /*
       Request a job for a worker with these parameters
   */
-  Job *RequestJob(const Worker::Specialization &workerSpecialization);
+  Job* RequestJob(const Worker::Specialization& workerSpecialization);
 
   // Worker threads wait for this to tell them there are jobs
   std::condition_variable JobNotifier;
@@ -109,7 +111,7 @@ private:
       May be better to have a vector of pointers to workers
       to prevent false sharing, speed testing is needed
   */
-  std::vector<Worker *> workers_;
+  std::vector<Worker*> workers_;
 
   /*
       Retain a list of all threads this manager has spun up
@@ -133,8 +135,7 @@ private:
   static constexpr size_t sMaxWorkerQueueLength_ = 4096;
 
   // Array of specialized queues for each type of job
-  moodycamel::ConcurrentQueue<Job *>
-      jobs[static_cast<size_t>(JobType::NumJobTypes)];
+  moodycamel::ConcurrentQueue<Job*> jobs[static_cast<size_t>(JobType::NumJobTypes)];
 
   /*
       Attempt to get a job of specified type.
@@ -143,7 +144,7 @@ private:
       If successful, pointer to retrived job is placed in 'job' reference.
       If unsuccessful, job is not modified
   */
-  bool TryGetJob(JobType type, Job *&job);
+  bool TryGetJob(JobType type, Job*& job);
 
   /*
       Function that will be spun up on threads for each worker
@@ -154,13 +155,13 @@ private:
 /*
 Add a job to the singleton manager instance
 */
-void RunJob(Job *job);
+void RunJob(Job* job);
 
 /*
 Tell this threads worker to work while waiting for a job
 
 Will block until job is complete
 */
-void WaitForJob(Job *job);
+void WaitForJob(Job* job);
 }
 #endif

@@ -14,20 +14,27 @@ All content copyright 2017 DigiPen (USA) Corporation, all rights reserved.
 #include <atomic>
 #include <thread>
 
-namespace JobBot {
+namespace JobBot
+{
 // Forward Declarations
 class Job;
 class Manager;
 
-class Worker {
+class Worker
+{
 public:
   // Description of the modes a worker can exist in
-  enum struct Mode { Primary, Volunteer };
+  enum struct Mode
+  {
+    Primary,
+    Volunteer
+  };
 
   /*
       Means of specifying types of work a worker should seek
   */
-  struct Specialization {
+  struct Specialization
+  {
     // Order in which workers with this specialization should request work
     JobType priorities[static_cast<size_t>(JobType::NumJobTypes) - 1];
 
@@ -52,13 +59,13 @@ public:
       maxJobs - the maxiumum jobs that can be accepted into this worker's queue
       mode - Mode this worker should operate as
   */
-  Worker(Manager *manager, Mode mode, const Specialization &specialization);
+  Worker(Manager* manager, Mode mode, const Specialization& specialization);
 
   /*
       Copying or assigning to a worker does not make sense
   */
-  Worker(const Worker &) = delete;
-  Worker &operator=(const Worker &) = delete;
+  Worker(const Worker&) = delete;
+  Worker& operator=(const Worker&) = delete;
 
   /*
       Steal jobs from other workers and complete them while waiting for
@@ -66,7 +73,7 @@ public:
 
       job - The job to wait for
   */
-  void WorkWhileWaitingFor(Job *job);
+  void WorkWhileWaitingFor(Job* job);
 
   /*
       Steal jobs from other workers and complete them while waiting for
@@ -76,7 +83,7 @@ public:
      sure that
       performing the check is thread safe
   */
-  void WorkWhileWaitingFor(std::atomic_bool &condition);
+  void WorkWhileWaitingFor(std::atomic_bool& condition);
 
   /*
       Start working on jobs from this worker's queue and stealing jobs if empty
@@ -115,11 +122,11 @@ public:
 
 private:
   // This worker's manager
-  Manager *manager_;
+  Manager* manager_;
   // Mode that this worker is operating in
   Mode workerMode_;
   // Specialized Type this worker should be
-  const Specialization &workerSpecialization_;
+  const Specialization& workerSpecialization_;
   // ID of the thread that this worker lives on
   std::thread::id threadID_;
   // If this worker should continue working
@@ -144,7 +151,7 @@ private:
 
       Returns some job if one was found, or nullptr otherwise
   */
-  Job *GetAJob();
+  Job* GetAJob();
 };
 }
 #endif

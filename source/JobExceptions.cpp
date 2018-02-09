@@ -8,24 +8,30 @@
 #include "Job.h"
 #include "JobExceptions.h"
 
-namespace JobBot {
-JobRejected::JobRejected(FailureType mode, Job *job)
-    : mode_(mode), guiltyJob_(job) {
-  if (guiltyJob_ != nullptr) {
+namespace JobBot
+{
+JobRejected::JobRejected(FailureType mode, Job* job) : mode_(mode), guiltyJob_(job)
+{
+  if (guiltyJob_ != nullptr)
+  {
     guiltyJob_->SetAllowCompletion(false);
   }
 }
 
-JobRejected::~JobRejected() {
-  if (guiltyJob_ != nullptr) {
+JobRejected::~JobRejected()
+{
+  if (guiltyJob_ != nullptr)
+  {
     guiltyJob_->SetAllowCompletion(true);
   }
 }
 
-const char *JobRejected::what() const throw() {
+const char* JobRejected::what() const throw()
+{
   std::string error;
   error += "Job was rejected by worker, ";
-  switch (mode_) {
+  switch (mode_)
+  {
   case FailureType::NullJob:
     error += "given job was null";
     break;
@@ -41,5 +47,5 @@ const char *JobRejected::what() const throw() {
 
 JobRejected::FailureType JobRejected::GetFailureMode() const { return mode_; }
 
-Job *JobRejected::GetJob() const { return guiltyJob_; }
+Job* JobRejected::GetJob() const { return guiltyJob_; }
 }

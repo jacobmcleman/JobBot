@@ -1,1 +1,2 @@
-cmake - DCMAKE_CSS_COMPILER = g++ cmake - H.- Bbuild
+cmake -DCMAKE_CSS_COMPILER=g++
+cmake -H. -Bbuild

@@ -152,6 +152,8 @@ void Job::Finish()
       parent_->Finish();
     }
 
+    flags_ &= ~JOB_FLAG_MASK_STATUS_IN_PROGRESS;
+
     // Decrement unfinishedJobs_ once more to bring it to -1
     // so that allocator can see this jobs is completely finished
     --unfinishedJobs_;

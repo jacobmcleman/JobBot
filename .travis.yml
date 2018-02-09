@@ -1,55 +1,44 @@
+language: c++
+sudo: false
+
+
+addons:
+  apt:
+    packages:
+      - valgrind
+      - g++-6
+    sources: &sources
+      - ubuntu-toolchain-r-test
 
 matrix:
   include:
-    - dist: trusty
-      sudo: required
-      language:
-        - cpp
-      compiler:
-        - gcc
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - gcc-6
-            - g++-6
-            - cmake
-      script:
-        # Link gcc-6 and g++-6 to their standard commands
-        - ln -s /usr/bin/gcc-6 /usr/local/bin/gcc
-        - ln -s /usr/bin/g++-6 /usr/local/bin/g++
-        # Export CC and CXX to tell cmake which compiler to use
-        - export CC=/usr/bin/gcc-6
-        - export CXX=/usr/bin/g++-6
-        # Check versions of gcc, g++ and cmake
-        - gcc -v && g++ -v && cmake --version
-        # Run your build commands next
-        - cmake -H. -Bbuild
-        - $ cmake --build build -- -j3
-    - dist: trusty
-        sudo: required
-        language:
-          - cpp
-        compiler:
-          - clang
-        addons:
-          apt:
-            sources:
-              - ubuntu-toolchain-r-test
-            packages:
-              - clang
-              - clang++
-              - cmake
-        script:
-          # Link gcc-6 and g++-6 to their standard commands
-          - ln -s /usr/bin/gcc-6 /usr/local/bin/gcc
-          - ln -s /usr/bin/g++-6 /usr/local/bin/g++
-          # Export CC and CXX to tell cmake which compiler to use
-          - export CC=/usr/bin/clang
-          - export CXX=/usr/bin/clang++
-          # Check versions of gcc, g++ and cmake
-          - clang -v && clang++ -v && cmake --version
-          # Run your build commands next
-          - cmake -H. -Bbuild
-          - $ cmake --build build -- -j3
+    ##########################################################################
+    # Build with the main configuration on all the supported compilers
+    #
+    # Note that we only use the memory checker on the main configuration to
+    # speed up Travis builds.
+    ##########################################################################
+    # Clang 3.6
+    - os: linux
+      env: UNIT_TESTS=true LLVM_VERSION=3.6.2 BOOST_VERSION=default ENABLE_MEMCHECK=true
+      compiler: clang
+
+    # Clang 3.7
+    - os: linux
+      env: UNIT_TESTS=true LLVM_VERSION=3.7.1 BOOST_VERSION=default ENABLE_MEMCHECK=true
+      compiler: clang
+
+    # Clang 3.8
+    - os: linux
+      env: UNIT_TESTS=true LLVM_VERSION=3.8.0 BOOST_VERSION=default ENABLE_MEMCHECK=true
+      compiler: clang
+
+    # Clang 3.9
+    - os: linux
+      env: UNIT_TESTS=true LLVM_VERSION=3.9.0 BOOST_VERSION=default ENABLE_MEMCHECK=true
+      compiler: clang
+
+    # GCC 6
+    - os: linux
+      env: UNIT_TESTS=true COMPILER=g++-6     BOOST_VERSION=default ENABLE_MEMCHECK=true
+      compiler: gcc

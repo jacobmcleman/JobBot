@@ -8,50 +8,38 @@
 #include "Job.h"
 #include "JobExceptions.h"
 
-namespace JobBot
-{
-    JobRejected::JobRejected(FailureType mode, Job* job) : mode_(mode), guiltyJob_(job)
-    {
-        if (guiltyJob_ != nullptr)
-        {
-            guiltyJob_->SetAllowCompletion(false);
-        }
-    }
+namespace JobBot {
+JobRejected::JobRejected(FailureType mode, Job *job)
+    : mode_(mode), guiltyJob_(job) {
+  if (guiltyJob_ != nullptr) {
+    guiltyJob_->SetAllowCompletion(false);
+  }
+}
 
-    JobRejected::~JobRejected()
-    {
-        if (guiltyJob_ != nullptr)
-        {
-            guiltyJob_->SetAllowCompletion(true);
-        }
-    }
+JobRejected::~JobRejected() {
+  if (guiltyJob_ != nullptr) {
+    guiltyJob_->SetAllowCompletion(true);
+  }
+}
 
-    const char* JobRejected::what() const throw()
-    {
-        std::string error;
-        error += "Job was rejected by worker, ";
-        switch (mode_)
-        {
-        case FailureType::NullJob:
-            error += "given job was null";
-            break;
-        case FailureType::QueueFull:
-            error += "worker's queue was full";
-            break;
-        default:
-            error += "reason was unknown";
-            break;
-        }
-        return nullptr;
-    }
+const char *JobRejected::what() const throw() {
+  std::string error;
+  error += "Job was rejected by worker, ";
+  switch (mode_) {
+  case FailureType::NullJob:
+    error += "given job was null";
+    break;
+  case FailureType::QueueFull:
+    error += "worker's queue was full";
+    break;
+  default:
+    error += "reason was unknown";
+    break;
+  }
+  return nullptr;
+}
 
-    JobRejected::FailureType JobRejected::GetFailureMode() const
-    {
-        return mode_;
-    }
+JobRejected::FailureType JobRejected::GetFailureMode() const { return mode_; }
 
-    Job * JobRejected::GetJob() const
-    {
-        return guiltyJob_;
-    }
+Job *JobRejected::GetJob() const { return guiltyJob_; }
 }

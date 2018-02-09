@@ -57,7 +57,8 @@ add_library(JobBot
 	${PROJECT_SOURCE_DIR}/Worker.cpp
 )
 
-add_executable(JobTests
-	tests/job_tests.cpp
-)
+add_executable(JobTests tests/job_tests.cpp)
 target_link_libraries(JobTests gtest_main JobBot)
+
+add_executable(ManagerTests tests/manager_tests.cpp)
+target_link_libraries(ManagerTests gtest_main JobBot)

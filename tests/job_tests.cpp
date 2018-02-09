@@ -1,6 +1,13 @@
+/**************************************************************************
+  Some short tests to test basic job functionality
+
+  Author:
+  Jake McLeman
+***************************************************************************/
+
 #include <gtest/gtest.h>
 
-#include "../source/Job.h"
+#include "Job.h"
 
 using namespace JobBot;
 
@@ -40,9 +47,9 @@ TEST(JobTests, RunJob)
 
   job->Run();
 
-  EXPECT_TRUE(testFunc1HasRun) << L"Job has been run but has not executed job code";
-  EXPECT_TRUE(job->IsFinished()) << L"Job has been run but is not marked as finished";
-  EXPECT_FALSE(job->InProgress()) << L"Job is finished but still marked as in progress";
+  EXPECT_TRUE(testFunc1HasRun) << "Job has been run but has not executed job code";
+  EXPECT_TRUE(job->IsFinished()) << "Job has been run but is not marked as finished";
+  EXPECT_FALSE(job->InProgress()) << "Job is finished but still marked as in progress";
 }
 
 TEST(JobTests, Parent)
@@ -131,8 +138,8 @@ TEST(JobTests, Data2)
 
 TEST(JobTests, JobTypeChecks)
 {
-	Job* job1 = Job::Create(TestJob1);
-	Job* job2 = Job::Create(TestJob2);
+  Job* job1 = Job::Create(TestJob1);
+  Job* job2 = Job::Create(TestJob2);
   EXPECT_FALSE(job1->MatchesType(JobType::Huge)) << "Tiny job was huge";
   EXPECT_FALSE(job1->MatchesType(JobType::Misc)) << "Tiny job was misc";
   EXPECT_TRUE(job1->MatchesType(JobType::Tiny)) << "Tiny job was not a tiny job";

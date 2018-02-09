@@ -22,23 +22,28 @@ matrix:
     - os: linux
       env: UNIT_TESTS=true LLVM_VERSION=3.6.2 BOOST_VERSION=default ENABLE_MEMCHECK=true
       compiler: clang
+      script: cmake -H. -Bbuild && cmake --build build
 
     # Clang 3.7
     - os: linux
       env: UNIT_TESTS=true LLVM_VERSION=3.7.1 BOOST_VERSION=default ENABLE_MEMCHECK=true
       compiler: clang
+      script: cmake -H. -Bbuild && cmake --build build
 
     # Clang 3.8
     - os: linux
       env: UNIT_TESTS=true LLVM_VERSION=3.8.0 BOOST_VERSION=default ENABLE_MEMCHECK=true
       compiler: clang
+      script: cmake -H. -Bbuild && cmake --build build
 
     # Clang 3.9
     - os: linux
       env: UNIT_TESTS=true LLVM_VERSION=3.9.0 BOOST_VERSION=default ENABLE_MEMCHECK=true
       compiler: clang
+      script: cmake -H. -Bbuild && cmake --build build
 
     # GCC 6
     - os: linux
       env: UNIT_TESTS=true COMPILER=g++-6     BOOST_VERSION=default ENABLE_MEMCHECK=true
       compiler: gcc
+      script: cmake -H. -Bbuild && cmake --build build

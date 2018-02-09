@@ -28,6 +28,15 @@ enum struct JobType {
   Null = -1
 };
 
+constexpr unsigned char JOB_FLAG_MASK_TINY = 0b00000001;
+constexpr unsigned char JOB_FLAG_MASK_HUGE = 0b00000010;
+constexpr unsigned char JOB_FLAG_MASK_IO = 0b00000100;
+constexpr unsigned char JOB_FLAG_MASK_GRAPHICS = 0b00001000;
+constexpr unsigned char JOB_FLAG_MASK_IMPORTANT = 0b00010000;
+
+constexpr unsigned char JOB_FLAG_MASK_STATUS_IN_PROGRESS = 0b10000000;
+constexpr unsigned char JOB_FLAG_MASK_STATUS_CANCELLED = 0b01000000;
+
 /*
     Forward declaration so that JobFunction typedef can happen
 */

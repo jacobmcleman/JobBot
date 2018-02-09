@@ -12,15 +12,6 @@
 #include "Job.h"
 
 namespace JobBot {
-constexpr unsigned char JOB_FLAG_MASK_TINY = 0b00000001;
-constexpr unsigned char JOB_FLAG_MASK_HUGE = 0b00000010;
-constexpr unsigned char JOB_FLAG_MASK_IO = 0b00000100;
-constexpr unsigned char JOB_FLAG_MASK_GRAPHICS = 0b00001000;
-constexpr unsigned char JOB_FLAG_MASK_IMPORTANT = 0b00010000;
-
-constexpr unsigned char JOB_FLAG_MASK_STATUS_IN_PROGRESS = 0b10000000;
-constexpr unsigned char JOB_FLAG_MASK_STATUS_CANCELLED = 0b01000000;
-
 // Initialize static members of job class
 std::atomic_size_t Job::sCurJobIndex_(0);
 Job Job::sPreallocJobArray_[scMaxJobAlloc_] = {};
@@ -98,7 +89,7 @@ void Job::Run() {
   // If there is a job function
   if (jobFunc_ != nullptr && !(flags_ & JOB_FLAG_MASK_STATUS_IN_PROGRESS)) {
     // Mark this job as in progress
-    flags_ |= JOB_FLAG_MASK_IN_PROGRESS;
+    flags_ |= JOB_FLAG_MASK_STATUS_IN_PROGRESS;
 
     // Run the job function
     jobFunc_(this);
@@ -189,7 +180,7 @@ JobFunction::JobFunction(JobFunctionPointer func, JobType type)
   if (type == JobType::Important)
     flag |= JOB_FLAG_MASK_IMPORTANT;
 
-  flags = flag & ~JOB_FLAG_MASK_IN_PROGRESS;
+  flags = flag & ~JOB_FLAG_MASK_STATUS_IN_PROGRESS;
 }
 
 IOJobFunction::IOJobFunction(JobFunctionPointer func)

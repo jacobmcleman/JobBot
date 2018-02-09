@@ -1,16 +1,55 @@
-addons:
-  apt:
-    sources:
-      - george-edison55-precise-backports
-    packages:
-      - cmake-data
-      - cmake
-      - clang
-      - gcc
 
-compiler:
-  - clang
-  - gcc
-
-language: cpp
-cmake -H. -Bbuild && cmake --build build
+matrix:
+  include:
+    - dist: trusty
+      sudo: required
+      language:
+        - cpp
+      compiler:
+        - gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - gcc-6
+            - g++-6
+            - cmake
+      script:
+        # Link gcc-6 and g++-6 to their standard commands
+        - ln -s /usr/bin/gcc-6 /usr/local/bin/gcc
+        - ln -s /usr/bin/g++-6 /usr/local/bin/g++
+        # Export CC and CXX to tell cmake which compiler to use
+        - export CC=/usr/bin/gcc-6
+        - export CXX=/usr/bin/g++-6
+        # Check versions of gcc, g++ and cmake
+        - gcc -v && g++ -v && cmake --version
+        # Run your build commands next
+        - cmake -H. -Bbuild
+        - $ cmake --build build -- -j3
+    - dist: trusty
+        sudo: required
+        language:
+          - cpp
+        compiler:
+          - clang
+        addons:
+          apt:
+            sources:
+              - ubuntu-toolchain-r-test
+            packages:
+              - clang
+              - clang++
+              - cmake
+        script:
+          # Link gcc-6 and g++-6 to their standard commands
+          - ln -s /usr/bin/gcc-6 /usr/local/bin/gcc
+          - ln -s /usr/bin/g++-6 /usr/local/bin/g++
+          # Export CC and CXX to tell cmake which compiler to use
+          - export CC=/usr/bin/clang
+          - export CXX=/usr/bin/clang++
+          # Check versions of gcc, g++ and cmake
+          - clang -v && clang++ -v && cmake --version
+          # Run your build commands next
+          - cmake -H. -Bbuild
+          - $ cmake --build build -- -j3

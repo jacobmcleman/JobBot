@@ -123,7 +123,7 @@ void Job::SetCallback(JobFunction func) { callbackFunc_ = func.function; }
 bool Job::MatchesType(JobType type) const
 {
   // Misc means matches no other type
-  if (type == JobType::Misc && flags_ & ((JOB_FLAG_MASK_IMPORTANT << 1) - 1) == 0)
+  if (type == JobType::Misc && (flags_ & ((JOB_FLAG_MASK_IMPORTANT << 1) - 1)) == 0)
     return true;
   else
   {

@@ -1,2 +1,0 @@
-/usr/bin/ar qc ../bin/libJobBot.a  CMakeFiles/JobBot.dir/source/Job.cpp.o CMakeFiles/JobBot.dir/source/JobExceptions.cpp.o CMakeFiles/JobBot.dir/source/Manager.cpp.o CMakeFiles/JobBot.dir/source/Worker.cpp.o
-/usr/bin/ranlib ../bin/libJobBot.a

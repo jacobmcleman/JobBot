@@ -75,6 +75,7 @@ TEST(JobTests, Parent)
   EXPECT_FALSE(job1->IsFinished()) << "Job1 is marked as finished before all of its children have finished";
   EXPECT_FALSE(testFunc2HasRun) << "Job2 has been prematurely executed";
   EXPECT_FALSE(job2->IsFinished()) << "Job2 is marked as finished before it has run";
+  EXPECT_FALSE(true) << "Deliberate test failure to test CI";
 
   // Run job2 (the child)
   job2->Run();

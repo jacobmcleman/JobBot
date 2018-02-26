@@ -140,8 +140,16 @@ void Manager::StartNewWorker(Worker::Mode mode)
   const Worker::Specialization* specialization;
   if (mode == Worker::Mode::Volunteer)
   {
-    // Volunteer workers are always marked as 'real time'
-    specialization = &Worker::Specialization::RealTime;
+    if(numWorkers_ > 1)
+    {
+      // Volunteer workers are always marked as 'real time'
+      specialization = &Worker::Specialization::RealTime;
+    }
+    else
+    {
+      //Running in single core mode the main thread has to take anything
+      specialization = &Worker::Specialization::None;
+    }
   }
   else
   {

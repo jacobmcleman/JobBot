@@ -246,8 +246,6 @@ TEST(ManagerTests, MultiThreadStartStop)
 
 TEST(ManagerTests, MultiThreadFewJobs)
 {
-  Manager man(8);
-
   Job* job1 = Job::Create(Job1);
   job1->SetAllowCompletion(false);
   Job* job2 = Job::CreateChild(Job2, job1);
@@ -256,13 +254,13 @@ TEST(ManagerTests, MultiThreadFewJobs)
   Job* job5 = Job::CreateChild(FloatsJob, 2.4f, job1);
   job1->SetAllowCompletion(true);
 
-  man.SubmitJob(job1);
-  man.SubmitJob(job2);
-  man.SubmitJob(job3);
-  man.SubmitJob(job4);
-  man.SubmitJob(job5);
+  JobBot::RunJob(job1);
+  JobBot::RunJob(job2);
+  JobBot::RunJob(job3);
+  JobBot::RunJob(job4);
+  JobBot::RunJob(job5);
 
-  man.GetThisThreadsWorker()->WorkWhileWaitingFor(job1);
+  JobBot::WaitForJob(job1);
 
   EXPECT_TRUE(job1->IsFinished()) << "Job1 has not been completed";
   EXPECT_TRUE(job2->IsFinished()) << "Job2 has not been completed";
@@ -393,35 +391,17 @@ TEST(ManagerTests, SingleThreadSplittingJobs)
 #endif
 }
 
-TEST(ManagerTests, MainThreadWontTakeIOJob)
+TEST(ManagerTests, SingleThreadWillTakeAnyJob)
 {
   Job* sleepyJob = Job::Create<int>(SleepJob, 1);
   Job* otherJob  = Job::Create(Job1);
   Manager man(1);
   man.SubmitJob(otherJob);
+  man.SubmitJob(sleepyJob);
+
+  man.GetThisThreadsWorker()->WorkWhileWaitingFor(otherJob);
   man.GetThisThreadsWorker()->WorkWhileWaitingFor(sleepyJob);
 
-  man.WaitForJob(otherJob);
-
-  std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-  EXPECT_FALSE(sleepyJob->IsFinished())
-      << "Main Thread did an IO job. This is a bad.";
-}
-
-TEST(ManagerTests, MainThreadWontTakeBeefyJob)
-{
-  Job* otherJob = Job::Create(Job1);
-  Job* tolBoi   = Job::Create<int>(TolBoiJob, 1);
-
-  Manager man(1);
-  man.SubmitJob(tolBoi);
-  man.SubmitJob(otherJob);
-
-  man.WaitForJob(otherJob);
-
-  std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-  EXPECT_FALSE(tolBoi->IsFinished())
-      << "Main Thread did an big job. This is a bad.";
+  EXPECT_TRUE(sleepyJob->IsFinished());
+  EXPECT_TRUE(otherJob->IsFinished());
 }

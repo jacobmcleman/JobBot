@@ -17,7 +17,7 @@ namespace JobBot
 Manager::Manager(size_t aNumWorkers)
     : workersWorking_(false),
       numWorkers_((aNumWorkers == 0) ? std::thread::hardware_concurrency()
-                                       : aNumWorkers)
+                                     : aNumWorkers)
 {
   workers_.reserve(numWorkers_);
 
@@ -140,14 +140,14 @@ void Manager::StartNewWorker(Worker::Mode mode)
   const Worker::Specialization* specialization;
   if (mode == Worker::Mode::Volunteer)
   {
-    if(numWorkers_ > 1)
+    if (numWorkers_ > 1)
     {
       // Volunteer workers are always marked as 'real time'
       specialization = &Worker::Specialization::RealTime;
     }
     else
     {
-      //Running in single core mode the main thread has to take anything
+      // Running in single core mode the main thread has to take anything
       specialization = &Worker::Specialization::None;
     }
   }

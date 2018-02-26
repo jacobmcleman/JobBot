@@ -246,6 +246,9 @@ TEST(ManagerTests, MultiThreadStartStop)
 
 TEST(ManagerTests, MultiThreadFewJobs)
 {
+  constexpr size_t workersToUse = 4;
+  Manager man(workersToUse);
+
   Job* job1 = Job::Create(Job1);
   job1->SetAllowCompletion(false);
   Job* job2 = Job::CreateChild(Job2, job1);
@@ -254,13 +257,13 @@ TEST(ManagerTests, MultiThreadFewJobs)
   Job* job5 = Job::CreateChild(FloatsJob, 2.4f, job1);
   job1->SetAllowCompletion(true);
 
-  JobBot::RunJob(job1);
-  JobBot::RunJob(job2);
-  JobBot::RunJob(job3);
-  JobBot::RunJob(job4);
-  JobBot::RunJob(job5);
+  man.SubmitJob(job1);
+  man.SubmitJob(job2);
+  man.SubmitJob(job3);
+  man.SubmitJob(job4);
+  man.SubmitJob(job5);
 
-  JobBot::WaitForJob(job1);
+  man.GetThisThreadsWorker()->WorkWhileWaitingFor(job1);
 
   EXPECT_TRUE(job1->IsFinished()) << "Job1 has not been completed";
   EXPECT_TRUE(job2->IsFinished()) << "Job2 has not been completed";

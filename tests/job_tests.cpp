@@ -14,11 +14,19 @@
 using namespace JobBot;
 
 bool testFunc1HasRun;
-void TestJobFunc1(Job* job) { UNUSED(job); testFunc1HasRun = true; }
+void TestJobFunc1(Job* job)
+{
+  UNUSED(job);
+  testFunc1HasRun = true;
+}
 TinyJobFunction TestJob1(TestJobFunc1);
 
 bool testFunc2HasRun;
-void TestJobFunc2(Job* job) { UNUSED(job); testFunc2HasRun = true; }
+void TestJobFunc2(Job* job)
+{
+  UNUSED(job);
+  testFunc2HasRun = true;
+}
 HugeJobFunction TestJob2(TestJobFunc2);
 
 bool testFunc3GotData;

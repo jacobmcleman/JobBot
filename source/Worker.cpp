@@ -18,20 +18,27 @@
 
 namespace JobBot
 {
-Worker::Worker(Manager* aManager, Mode aMode, const Specialization& aSpecialization)
-    : manager_(aManager), workerMode_(aMode), workerSpecialization_(aSpecialization),
-      threadID_(std::this_thread::get_id()), keepWorking_(false), isWorking_(false)
+Worker::Worker(Manager* aManager, Mode aMode,
+               const Specialization& aSpecialization)
+    : manager_(aManager), workerMode_(aMode),
+      workerSpecialization_(aSpecialization),
+      threadID_(std::this_thread::get_id()), keepWorking_(false),
+      isWorking_(false)
 {
 }
 
 Worker::Specialization Worker::Specialization::None = {
-    {JobType::Huge, JobType::Graphics, JobType::Misc, JobType::IO, JobType::Tiny}};
+    {JobType::Huge, JobType::Graphics, JobType::Misc, JobType::IO,
+     JobType::Tiny}};
 Worker::Specialization Worker::Specialization::IO = {
-    {JobType::IO, JobType::Huge, JobType::Misc, JobType::Graphics, JobType::Tiny}};
+    {JobType::IO, JobType::Huge, JobType::Misc, JobType::Graphics,
+     JobType::Tiny}};
 Worker::Specialization Worker::Specialization::Graphics = {
-    {JobType::Graphics, JobType::Tiny, JobType::Misc, JobType::Null, JobType::Null}};
+    {JobType::Graphics, JobType::Tiny, JobType::Misc, JobType::Null,
+     JobType::Null}};
 Worker::Specialization Worker::Specialization::RealTime = {
-    {JobType::Tiny, JobType::Misc, JobType::Graphics, JobType::Null, JobType::Null}};
+    {JobType::Tiny, JobType::Misc, JobType::Graphics, JobType::Null,
+     JobType::Null}};
 
 void Worker::WorkWhileWaitingFor(Job* aWaitJob)
 {

@@ -32,7 +32,9 @@ public:
      error, but it is
       NOT THREAD SAFE
   */
-  template <typename T> using ParallelForJobFunction = void (*)(Job* job, T* dataChunk, size_t chunkSize);
+  template <typename T>
+  using ParallelForJobFunction = void (*)(Job* job, T* dataChunk,
+                                          size_t chunkSize);
 
   /*
       Creates a parallel for job
@@ -42,8 +44,9 @@ public:
       A job is created to handle every *chunkSize* elements
   */
   template <typename T>
-  static Job* ParallelForJob(Manager* manager, ParallelForJobFunction<T> function, T* data, size_t size,
-                             size_t chunkSize);
+  static Job* ParallelForJob(Manager* manager,
+                             ParallelForJobFunction<T> function, T* data,
+                             size_t size, size_t chunkSize);
 
 private:
   /*
@@ -82,25 +85,33 @@ private:
 };
 
 template <typename T>
-inline Job* Utilities::ParallelForJob(Manager* manager, ParallelForJobFunction<T> function, T* data, size_t size,
-                                      size_t chunkSize)
+inline Job* Utilities::ParallelForJob(Manager* manager,
+                                      ParallelForJobFunction<T> function,
+                                      T* data, size_t size, size_t chunkSize)
 {
-  ParallelForSplitterData<T> splitterData = {function, data, size, chunkSize, manager};
-  return Job::Create<ParallelForSplitterData<T>>(ParallelForSplitterFunction<T>, splitterData);
+  ParallelForSplitterData<T> splitterData = {function, data, size, chunkSize,
+                                             manager};
+  return Job::Create<ParallelForSplitterData<T>>(ParallelForSplitterFunction<T>,
+                                                 splitterData);
 }
 
-template <typename T> inline void Utilities::ParallelForSplitterFunction(Job* job)
+template <typename T>
+inline void Utilities::ParallelForSplitterFunction(Job* job)
 {
-  ParallelForSplitterData<T>& jobData = job->GetData<ParallelForSplitterData<T>>();
+  ParallelForSplitterData<T>& jobData =
+      job->GetData<ParallelForSplitterData<T>>();
 
   job->SetAllowCompletion(false);
 
   for (size_t i = 0; i < jobData.size; i += jobData.chunkSize)
   {
     // Create data for a parallel for job
-    ParallelForJobData<T> data = {jobData.function, jobData.data + i, std::min(jobData.chunkSize, jobData.size - i)};
+    ParallelForJobData<T> data = {
+        jobData.function, jobData.data + i,
+        std::min(jobData.chunkSize, jobData.size - i)};
     // Send job with data to the manager
-    jobData.manager->SubmitJob(Job::CreateChild<ParallelForJobData<T>>(ParallelForJob<T>, data, job));
+    jobData.manager->SubmitJob(
+        Job::CreateChild<ParallelForJobData<T>>(ParallelForJob<T>, data, job));
   }
 
   job->SetAllowCompletion(true);

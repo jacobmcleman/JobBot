@@ -33,6 +33,13 @@ if (CMAKE_VERSION VERSION_LESS 2.8.11)
   include_directories("${gtest_SOURCE_DIR}/include")
 endif()
 
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+
+set(CMAKE_CXX_FLAGS "-Wall -Wextra")
+set(CMAKE_CXX_FLAGS_DEBUG "-g")
+set(CMAKE_CXX_FLAGS_RELEASE "-O2")
 
 # Project's name
 project(JobBot)
@@ -57,7 +64,8 @@ add_library(JobBot
 	${PROJECT_SOURCE_DIR}/Worker.cpp
 )
 
-add_executable(JobTests
-	tests/job_tests.cpp
-)
+add_executable(JobTests tests/job_tests.cpp)
 target_link_libraries(JobTests gtest_main JobBot)
+
+add_executable(ManagerTests tests/manager_tests.cpp)
+target_link_libraries(ManagerTests gtest_main JobBot)

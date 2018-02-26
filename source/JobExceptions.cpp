@@ -10,7 +10,8 @@
 
 namespace JobBot
 {
-JobRejected::JobRejected(FailureType mode, Job* job) : mode_(mode), guiltyJob_(job)
+JobRejected::JobRejected(FailureType mode, Job* job)
+    : mode_(mode), guiltyJob_(job)
 {
   if (guiltyJob_ != nullptr)
   {

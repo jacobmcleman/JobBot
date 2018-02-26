@@ -135,7 +135,8 @@ private:
   static constexpr size_t sMaxWorkerQueueLength_ = 4096;
 
   // Array of specialized queues for each type of job
-  moodycamel::ConcurrentQueue<Job*> jobs[static_cast<size_t>(JobType::NumJobTypes)];
+  moodycamel::ConcurrentQueue<Job*>
+      jobs[static_cast<size_t>(JobType::NumJobTypes)];
 
   /*
       Attempt to get a job of specified type.

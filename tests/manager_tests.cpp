@@ -5,22 +5,32 @@
   Jake McLeman
 ***************************************************************************/
 
-#include <gtest/gtest.h>
-#include <thread>
 #include <chrono>
 #include <cmath>
+#include <gtest/gtest.h>
+#include <thread>
 
 #include "Job.h"
 #include "Manager.h"
 
 using namespace JobBot;
 
+#define UNUSED(thing) (void)thing
+
 bool jobFunc1HasRun;
-void JobFunc1(Job* job) { jobFunc1HasRun = true; }
+void JobFunc1(Job* job)
+{
+  UNUSED(job);
+  jobFunc1HasRun = true;
+}
 TinyJobFunction Job1(JobFunc1);
 
 bool jobFunc2HasRun;
-void JobFunc2(Job* job) { jobFunc2HasRun = true; }
+void JobFunc2(Job* job)
+{
+  UNUSED(job);
+  jobFunc2HasRun = true;
+}
 TinyJobFunction Job2(JobFunc2);
 
 /*
@@ -37,9 +47,11 @@ void SleepJobFunc(Job* job)
 IOJobFunction SleepJob(SleepJobFunc);
 
 /*
-  Test function to deliberately upset the CPU with many slow floating point operations
+  Test function to deliberately upset the CPU with many slow floating point
+  operations
 
-  Keep this thread busy so that the scheduler can't take this job that takes significant
+  Keep this thread busy so that the scheduler can't take this job that takes
+  significant
   time off the CPU
 */
 bool floatsJobHasRun;
@@ -111,8 +123,10 @@ void SplitterJobFunc(Job* job)
   else
   {
     job->SetAllowCompletion(false);
-    splitterMan->SubmitJob(Job::CreateChild<int>(SplitterJob, splitLevelsLeft - 1, job));
-    splitterMan->SubmitJob(Job::CreateChild<int>(SplitterJob, splitLevelsLeft - 1, job));
+    splitterMan->SubmitJob(
+        Job::CreateChild<int>(SplitterJob, splitLevelsLeft - 1, job));
+    splitterMan->SubmitJob(
+        Job::CreateChild<int>(SplitterJob, splitLevelsLeft - 1, job));
     job->SetAllowCompletion(true);
   }
 }
@@ -123,7 +137,8 @@ TEST(ManagerTests, GetThisThreadsWorker)
 
   std::thread::id workerID = man.GetThisThreadsWorker()->GetThreadID();
   std::thread::id thisID   = std::this_thread::get_id();
-  EXPECT_TRUE(workerID == thisID) << "Single worker thread is not on main thread";
+  EXPECT_TRUE(workerID == thisID)
+      << "Single worker thread is not on main thread";
 }
 
 TEST(ManagerTests, SingleThreadFewJobs)
@@ -161,7 +176,8 @@ TEST(ManagerTests, SingleThreadFewJobs)
   EXPECT_TRUE(floatsJobHasRun) << "Job has not been executed";
 
 #ifdef _DEBUG
-  EXPECT_EQ((size_t)0, Job::GetUnfinishedJobCount()) << "Some jobs were not finished";
+  EXPECT_EQ((size_t)0, Job::GetUnfinishedJobCount())
+      << "Some jobs were not finished";
 #endif
 }
 
@@ -176,9 +192,11 @@ TEST(ManagerTests, SingleThreadManyJobs)
   Job* parentJob = jobs[0];
   man.SubmitJob(parentJob);
 
-  for (int i = 1; i < jobsToMake; ++i)
+  for (unsigned i = 1; i < jobsToMake; ++i)
   {
-    jobs[i] = Job::CreateChild<float>(FloatsJob, (((float)std::rand()) / ((float)std::rand() + 1)), parentJob);
+    jobs[i] = Job::CreateChild<float>(
+        FloatsJob, (((float)std::rand()) / ((float)std::rand() + 1)),
+        parentJob);
     man.SubmitJob(jobs[i]);
 
     EXPECT_FALSE(jobs[i]->IsFinished()) << "Job has been prematurely executed";
@@ -186,13 +204,14 @@ TEST(ManagerTests, SingleThreadManyJobs)
 
   man.GetThisThreadsWorker()->WorkWhileWaitingFor(parentJob);
 
-  for (int i = 0; i < jobsToMake; ++i)
+  for (unsigned i = 0; i < jobsToMake; ++i)
   {
     EXPECT_TRUE(jobs[i]->IsFinished()) << "Job has not been completed";
   }
 
 #ifdef _DEBUG
-  EXPECT_EQ((size_t)0, Job::GetUnfinishedJobCount()) << "Some jobs were not finished";
+  EXPECT_EQ((size_t)0, Job::GetUnfinishedJobCount())
+      << "Some jobs were not finished";
 #endif
 }
 
@@ -215,7 +234,8 @@ TEST(ManagerTests, SubmitNullJob)
 }
 
 /*
-  This test will sleep for 3ms to make sure the threads have enough time to crash if they are going to
+  This test will sleep for 3ms to make sure the threads have enough time to
+  crash if they are going to
 */
 TEST(ManagerTests, MultiThreadStartStop)
 {
@@ -251,7 +271,8 @@ TEST(ManagerTests, MultiThreadFewJobs)
   EXPECT_TRUE(job5->IsFinished()) << "Job5 has not been completed";
 
 #ifdef _DEBUG
-  EXPECT_EQ((size_t)0, Job::GetUnfinishedJobCount()) << "Some jobs were not finished";
+  EXPECT_EQ((size_t)0, Job::GetUnfinishedJobCount())
+      << "Some jobs were not finished";
 #endif
 }
 
@@ -268,22 +289,25 @@ TEST(ManagerTests, MultiThreadManyJobs)
   parentJob->SetAllowCompletion(false);
   man.SubmitJob(parentJob);
 
-  for (int i = 1; i < jobsToMake; ++i)
+  for (unsigned i = 1; i < jobsToMake; ++i)
   {
-    jobs[i] = Job::CreateChild<float>(FloatsJob, (((float)std::rand()) / ((float)std::rand() + 1)), parentJob);
+    jobs[i] = Job::CreateChild<float>(
+        FloatsJob, (((float)std::rand()) / ((float)std::rand() + 1)),
+        parentJob);
     man.SubmitJob(jobs[i]);
   }
   parentJob->SetAllowCompletion(true);
 
   man.GetThisThreadsWorker()->WorkWhileWaitingFor(parentJob);
 
-  for (int i = 0; i < jobsToMake; ++i)
+  for (unsigned i = 0; i < jobsToMake; ++i)
   {
     EXPECT_TRUE(jobs[i]->IsFinished()) << "Job has not been completed";
   }
 
 #ifdef _DEBUG
-  EXPECT_EQ((size_t)0, Job::GetUnfinishedJobCount()) << "Some jobs were not finished";
+  EXPECT_EQ((size_t)0, Job::GetUnfinishedJobCount())
+      << "Some jobs were not finished";
 #endif
 }
 
@@ -303,9 +327,11 @@ TEST(ManagerTests, StressTest)
 
   man.SubmitJob(parentJob);
 
-  for (int i = 1; i < jobsToMake; ++i)
+  for (unsigned i = 1; i < jobsToMake; ++i)
   {
-    jobs[i] = Job::CreateChild<float>(FloatsJob, (((float)std::rand()) / ((float)std::rand() + 1)), parentJob);
+    jobs[i] = Job::CreateChild<float>(
+        FloatsJob, (((float)std::rand()) / ((float)std::rand() + 1)),
+        parentJob);
 
     bool failed = false;
 
@@ -329,13 +355,14 @@ TEST(ManagerTests, StressTest)
 
   man.GetThisThreadsWorker()->WorkWhileWaitingFor(parentJob);
 
-  for (int i = 0; i < jobsToMake; ++i)
+  for (unsigned i = 0; i < jobsToMake; ++i)
   {
     EXPECT_TRUE(jobs[i]->IsFinished()) << "Job has not been completed";
   }
 
 #ifdef _DEBUG
-  EXPECT_EQ((size_t)0, Job::GetUnfinishedJobCount()) << "Some jobs were not finished";
+  EXPECT_EQ((size_t)0, Job::GetUnfinishedJobCount())
+      << "Some jobs were not finished";
 #endif
 }
 
@@ -361,7 +388,8 @@ TEST(ManagerTests, SingleThreadSplittingJobs)
   splitterMan = nullptr;
 
 #ifdef _DEBUG
-  EXPECT_EQ((size_t)0, Job::GetUnfinishedJobCount()) << "Some jobs were not finished";
+  EXPECT_EQ((size_t)0, Job::GetUnfinishedJobCount())
+      << "Some jobs were not finished";
 #endif
 }
 
@@ -371,13 +399,14 @@ TEST(ManagerTests, MainThreadWontTakeIOJob)
   Job* otherJob  = Job::Create(Job1);
   Manager man(1);
   man.SubmitJob(otherJob);
-  man.SubmitJob(sleepyJob);
+  man.GetThisThreadsWorker()->WorkWhileWaitingFor(sleepyJob);
 
   man.WaitForJob(otherJob);
 
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-  EXPECT_FALSE(sleepyJob->IsFinished()) << "Main Thread did an IO job. This is a bad.";
+  EXPECT_FALSE(sleepyJob->IsFinished())
+      << "Main Thread did an IO job. This is a bad.";
 }
 
 TEST(ManagerTests, MainThreadWontTakeBeefyJob)
@@ -393,5 +422,6 @@ TEST(ManagerTests, MainThreadWontTakeBeefyJob)
 
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-  EXPECT_FALSE(tolBoi->IsFinished()) << "Main Thread did an big job. This is a bad.";
+  EXPECT_FALSE(tolBoi->IsFinished())
+      << "Main Thread did an big job. This is a bad.";
 }

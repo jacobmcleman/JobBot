@@ -15,7 +15,9 @@
 namespace JobBot
 {
 Manager::Manager(size_t aNumWorkers)
-    : numWorkers_((aNumWorkers == 0) ? std::thread::hardware_concurrency() : aNumWorkers), workersWorking_(false)
+    : workersWorking_(false),
+      numWorkers_((aNumWorkers == 0) ? std::thread::hardware_concurrency()
+                                       : aNumWorkers)
 {
   workers_.reserve(numWorkers_);
 
@@ -72,9 +74,15 @@ Worker* Manager::GetWorkerByThreadID(std::thread::id id)
   return nullptr;
 }
 
-Worker* Manager::GetThisThreadsWorker() { return GetWorkerByThreadID(std::this_thread::get_id()); }
+Worker* Manager::GetThisThreadsWorker()
+{
+  return GetWorkerByThreadID(std::this_thread::get_id());
+}
 
-Worker* Manager::GetRandomWorker() { return workers_[std::rand() % workers_.size()]; }
+Worker* Manager::GetRandomWorker()
+{
+  return workers_[std::rand() % workers_.size()];
+}
 
 Manager* Manager::GetInstance()
 {
@@ -84,7 +92,10 @@ Manager* Manager::GetInstance()
 
 void Manager::RunJob(Job* job) { GetInstance()->SubmitJob(job); }
 
-void Manager::WaitForJob(Job* job) { GetInstance()->GetThisThreadsWorker()->WorkWhileWaitingFor(job); }
+void Manager::WaitForJob(Job* job)
+{
+  GetInstance()->GetThisThreadsWorker()->WorkWhileWaitingFor(job);
+}
 
 Job* Manager::RequestJob(const Worker::Specialization& workerSpecialization)
 {
@@ -95,7 +106,7 @@ Job* Manager::RequestJob(const Worker::Specialization& workerSpecialization)
     return job;
   }
 
-  for (int i = 0; i < static_cast<size_t>(JobType::NumJobTypes) - 1; ++i)
+  for (unsigned i = 0; i < static_cast<size_t>(JobType::NumJobTypes) - 1; ++i)
   {
     JobType toTry = workerSpecialization.priorities[i];
     if (toTry != JobType::Null && TryGetJob(toTry, job))
@@ -107,16 +118,21 @@ Job* Manager::RequestJob(const Worker::Specialization& workerSpecialization)
   return nullptr;
 }
 
-bool Manager::TryGetJob(JobType type, Job*& job) { return jobs[static_cast<size_t>(type)].try_dequeue(job); }
+bool Manager::TryGetJob(JobType type, Job*& job)
+{
+  return jobs[static_cast<size_t>(type)].try_dequeue(job);
+}
 
 void Manager::StartNewWorker(Worker::Mode mode)
 {
   // Possible specializations for primary workers
   // None is deliberately here twice to make it happen half the time
-  constexpr Worker::Specialization* primarySpecs[] = {&Worker::Specialization::None, &Worker::Specialization::None,
-                                                      &Worker::Specialization::Graphics, &Worker::Specialization::IO};
+  constexpr Worker::Specialization* primarySpecs[] = {
+      &Worker::Specialization::None, &Worker::Specialization::None,
+      &Worker::Specialization::Graphics, &Worker::Specialization::IO};
   // Number of primary specializations in the above array
-  constexpr size_t numPrimarySpecs = sizeof(primarySpecs) / sizeof(primarySpecs[0]);
+  constexpr size_t numPrimarySpecs =
+      sizeof(primarySpecs) / sizeof(primarySpecs[0]);
   // Counter to use to circularly move through above array when chosing
   // specializations for new primary workers
   static unsigned primaryCounter = 0;

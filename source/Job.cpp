@@ -22,23 +22,34 @@ std::atomic_size_t Job::sJobsAdded_     = 0;
 std::atomic_size_t Job::sJobsCompleted_ = 0;
 #endif
 
-constexpr unsigned char JOB_FLAG_MASK_TINY      = 1 << static_cast<unsigned>(JobType::Tiny);
-constexpr unsigned char JOB_FLAG_MASK_HUGE      = 1 << static_cast<unsigned>(JobType::Huge);
-constexpr unsigned char JOB_FLAG_MASK_IO        = 1 << static_cast<unsigned>(JobType::IO);
-constexpr unsigned char JOB_FLAG_MASK_GRAPHICS  = 1 << static_cast<unsigned>(JobType::Graphics);
-constexpr unsigned char JOB_FLAG_MASK_IMPORTANT = 1 << static_cast<unsigned>(JobType::Important);
+constexpr unsigned char JOB_FLAG_MASK_TINY =
+    1 << static_cast<unsigned>(JobType::Tiny);
+constexpr unsigned char JOB_FLAG_MASK_HUGE =
+    1 << static_cast<unsigned>(JobType::Huge);
+constexpr unsigned char JOB_FLAG_MASK_IO =
+    1 << static_cast<unsigned>(JobType::IO);
+constexpr unsigned char JOB_FLAG_MASK_GRAPHICS =
+    1 << static_cast<unsigned>(JobType::Graphics);
+constexpr unsigned char JOB_FLAG_MASK_IMPORTANT =
+    1 << static_cast<unsigned>(JobType::Important);
 
-constexpr unsigned char JOB_FLAG_MASK_STATUS_IN_PROGRESS = JOB_FLAG_MASK_IMPORTANT << 1;
-constexpr unsigned char JOB_FLAG_MASK_STATUS_CANCELLED   = JOB_FLAG_MASK_STATUS_IN_PROGRESS << 1;
+constexpr unsigned char JOB_FLAG_MASK_STATUS_IN_PROGRESS =
+    JOB_FLAG_MASK_IMPORTANT << 1;
+constexpr unsigned char JOB_FLAG_MASK_STATUS_CANCELLED =
+    JOB_FLAG_MASK_STATUS_IN_PROGRESS << 1;
 
 Job::Job()
-    : jobFunc_(nullptr), callbackFunc_(nullptr), unfinishedJobs_(-1), parent_(nullptr), ghostJobCount_(0), flags_(0)
+    : jobFunc_(nullptr), callbackFunc_(nullptr), unfinishedJobs_(-1),
+      parent_(nullptr), ghostJobCount_(0), flags_(0)
 {
 }
 
 Job::Job(JobFunction function, Job* parent)
-    : jobFunc_(function.function), callbackFunc_(nullptr), unfinishedJobs_(1), parent_(parent), ghostJobCount_(0),
-      flags_(function.flags & ~(JOB_FLAG_MASK_STATUS_IN_PROGRESS | JOB_FLAG_MASK_STATUS_CANCELLED))
+    : jobFunc_(function.function), callbackFunc_(nullptr), unfinishedJobs_(1),
+      parent_(parent), ghostJobCount_(0),
+      flags_(
+          function.flags &
+          ~(JOB_FLAG_MASK_STATUS_IN_PROGRESS | JOB_FLAG_MASK_STATUS_CANCELLED))
 {
   // If there is a parent, it now has one more job that must finish before
   // parent is done
@@ -63,7 +74,10 @@ Job& Job::operator=(const Job& job)
   return *this;
 }
 
-Job* Job::Create(JobFunction& function) { return CreateChild(function, nullptr); }
+Job* Job::Create(JobFunction& function)
+{
+  return CreateChild(function, nullptr);
+}
 
 Job* Job::CreateChild(JobFunction& function, Job* parent)
 {
@@ -99,7 +113,7 @@ Job* Job::CreateChild(JobFunction& function, Job* parent)
 void Job::Run()
 {
   // If there is a job function
-  if (jobFunc_ != nullptr && !(flags_ & JOB_FLAG_MASK_STATUS_IN_PROGRESS))
+  if (jobFunc_ != nullptr)
   {
     // Mark this job as in progress
     flags_ |= JOB_FLAG_MASK_STATUS_IN_PROGRESS;
@@ -123,7 +137,8 @@ void Job::SetCallback(JobFunction func) { callbackFunc_ = func.function; }
 bool Job::MatchesType(JobType type) const
 {
   // Misc means matches no other type
-  if (type == JobType::Misc && (flags_ & ((JOB_FLAG_MASK_IMPORTANT << 1) - 1)) == 0)
+  if (type == JobType::Misc &&
+      (flags_ & ((JOB_FLAG_MASK_IMPORTANT << 1) - 1)) == 0)
     return true;
   else
   {
@@ -132,7 +147,10 @@ bool Job::MatchesType(JobType type) const
   }
 }
 
-bool Job::InProgress() const { return flags_ & JOB_FLAG_MASK_STATUS_IN_PROGRESS; }
+bool Job::InProgress() const
+{
+  return flags_ & JOB_FLAG_MASK_STATUS_IN_PROGRESS;
+}
 
 void Job::Finish()
 {
@@ -202,7 +220,8 @@ void Job::SetAllowCompletion(bool aCompletable)
 
 bool Job::GetCompletable() const { return ghostJobCount_; }
 
-JobFunction::JobFunction(JobFunctionPointer func, JobType type) : function(func), flags(0)
+JobFunction::JobFunction(JobFunctionPointer func, JobType type)
+    : function(func), flags(0)
 {
   unsigned char flag = 0;
   if (type == JobType::Tiny) flag |= JOB_FLAG_MASK_TINY;
@@ -214,12 +233,27 @@ JobFunction::JobFunction(JobFunctionPointer func, JobType type) : function(func)
   flags = flag & ~JOB_FLAG_MASK_STATUS_IN_PROGRESS;
 }
 
-IOJobFunction::IOJobFunction(JobFunctionPointer func) : JobFunction(func, JobType::IO) {}
+IOJobFunction::IOJobFunction(JobFunctionPointer func)
+    : JobFunction(func, JobType::IO)
+{
+}
 
-TinyJobFunction::TinyJobFunction(JobFunctionPointer func) : JobFunction(func, JobType::Tiny) {}
+TinyJobFunction::TinyJobFunction(JobFunctionPointer func)
+    : JobFunction(func, JobType::Tiny)
+{
+}
 
-HugeJobFunction::HugeJobFunction(JobFunctionPointer func) : JobFunction(func, JobType::Huge) {}
+HugeJobFunction::HugeJobFunction(JobFunctionPointer func)
+    : JobFunction(func, JobType::Huge)
+{
+}
 
-GraphicsJobFunction::GraphicsJobFunction(JobFunctionPointer func) : JobFunction(func, JobType::Graphics) {}
-ImportantJobFunction::ImportantJobFunction(JobFunctionPointer func) : JobFunction(func, JobType::Important) {}
+GraphicsJobFunction::GraphicsJobFunction(JobFunctionPointer func)
+    : JobFunction(func, JobType::Graphics)
+{
+}
+ImportantJobFunction::ImportantJobFunction(JobFunctionPointer func)
+    : JobFunction(func, JobType::Important)
+{
+}
 }

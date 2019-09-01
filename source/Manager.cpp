@@ -26,7 +26,7 @@ Manager::Manager(size_t aNumWorkers)
 
 Manager::~Manager() { StopWorkers(); }
 
-bool Manager::SubmitJob(Job* job)
+bool Manager::SubmitJob(JobHandle job)
 {
   if (job == nullptr)
   {
@@ -90,16 +90,16 @@ Manager* Manager::GetInstance()
   return &man;
 }
 
-void Manager::RunJob(Job* job) { GetInstance()->SubmitJob(job); }
+void Manager::RunJob(JobHandle job) { GetInstance()->SubmitJob(job); }
 
-void Manager::WaitForJob(Job* job)
+void Manager::WaitForJob(JobHandle job)
 {
   GetInstance()->GetThisThreadsWorker()->WorkWhileWaitingFor(job);
 }
 
-Job* Manager::RequestJob(const Worker::Specialization& workerSpecialization)
+JobHandle Manager::RequestJob(const Worker::Specialization& workerSpecialization)
 {
-  Job* job;
+  JobHandle job;
 
   if (TryGetJob(JobType::Important, job))
   {
@@ -118,7 +118,7 @@ Job* Manager::RequestJob(const Worker::Specialization& workerSpecialization)
   return nullptr;
 }
 
-bool Manager::TryGetJob(JobType type, Job*& job)
+bool Manager::TryGetJob(JobType type, JobHandle& job)
 {
   return jobs[static_cast<size_t>(type)].try_dequeue(job);
 }
@@ -223,7 +223,7 @@ void Manager::StartWorkers()
   workersWorking_ = true;
 }
 
-void RunJob(Job* job) { JobBot::Manager::RunJob(job); }
+void Run(JobHandle job) { JobBot::Manager::RunJob(job); }
 
-void WaitForJob(Job* job) { JobBot::Manager::WaitForJob(job); }
+void WaitForJob(JobHandle job) { JobBot::Manager::WaitForJob(job); }
 }

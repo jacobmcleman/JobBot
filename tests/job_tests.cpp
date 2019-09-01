@@ -14,7 +14,7 @@
 using namespace JobBot;
 
 bool testFunc1HasRun;
-void TestJobFunc1(Job* job)
+void TestJobFunc1(JobHandle job)
 {
   UNUSED(job);
   testFunc1HasRun = true;
@@ -22,7 +22,7 @@ void TestJobFunc1(Job* job)
 TinyJobFunction TestJob1(TestJobFunc1);
 
 bool testFunc2HasRun;
-void TestJobFunc2(Job* job)
+void TestJobFunc2(JobHandle job)
 {
   UNUSED(job);
   testFunc2HasRun = true;
@@ -30,11 +30,11 @@ void TestJobFunc2(Job* job)
 HugeJobFunction TestJob2(TestJobFunc2);
 
 bool testFunc3GotData;
-void TestJobFunc3(Job* job) { testFunc3GotData = (job->GetData<int>() == 4); }
+void TestJobFunc3(JobHandle job) { testFunc3GotData = (job->GetData<int>() == 4); }
 IOJobFunction TestJob3(TestJobFunc3);
 
 bool testFunc4GotData;
-void TestJobFunc4(Job* job)
+void TestJobFunc4(JobHandle job)
 {
   testFunc4GotData = (job->GetData<float>() == 25.12f);
 }
@@ -48,7 +48,7 @@ TEST(JobTests, SizeVerification)
 
 TEST(JobTests, Create)
 {
-  Job* job = Job::Create(TestJob1);
+  JobHandle job = Job::Create(TestJob1);
 
   EXPECT_FALSE(job->IsFinished()) << "Job has not been created correctly";
   EXPECT_FALSE(job->InProgress()) << "Job has not been created correctly";
@@ -57,7 +57,7 @@ TEST(JobTests, Create)
 TEST(JobTests, RunJob)
 {
   testFunc1HasRun = false;
-  Job* job        = Job::Create(TestJob1);
+  JobHandle job        = Job::Create(TestJob1);
 
   EXPECT_FALSE(testFunc1HasRun) << "Job has been prematurely executed";
   EXPECT_FALSE(job->IsFinished())
@@ -79,8 +79,8 @@ TEST(JobTests, Parent)
   testFunc2HasRun = false;
 
   // Create 2 jobs with job2 as a child of job1
-  Job* job1 = Job::Create(TestJob1);
-  Job* job2 = Job::CreateChild(TestJob2, job1);
+  JobHandle job1 = Job::Create(TestJob1);
+  JobHandle job2 = Job::CreateChild(TestJob2, job1);
 
   // Make sure that nothing has prematurely fired
   EXPECT_FALSE(testFunc1HasRun) << "Job1 has been prematurely executed";
@@ -120,7 +120,7 @@ TEST(JobTests, Callback)
   testFunc2HasRun = false;
 
   // Create job1 with a callback function
-  Job* job = Job::Create(TestJob1);
+  JobHandle job = Job::Create(TestJob1);
   job->SetCallback(TestJob2);
 
   EXPECT_FALSE(testFunc1HasRun) << "Job has been prematurely executed";
@@ -142,7 +142,7 @@ TEST(JobTests, Data1)
 {
   testFunc3GotData = false;
 
-  Job* job = Job::Create(TestJob3, 4);
+  JobHandle job = Job::Create(TestJob3, 4);
 
   EXPECT_FALSE(testFunc3GotData)
       << "Function somehow already got the data even though it hasn't run yet";
@@ -160,7 +160,7 @@ TEST(JobTests, Data2)
 {
   testFunc4GotData = false;
 
-  Job* job = Job::Create(TestJob4, 25.12f);
+  JobHandle job = Job::Create(TestJob4, 25.12f);
 
   EXPECT_FALSE(testFunc4GotData)
       << "Function somehow already got the data even though it hasn't run yet";
@@ -175,8 +175,8 @@ TEST(JobTests, Data2)
 
 TEST(JobTests, JobTypeChecks)
 {
-  Job* job1 = Job::Create(TestJob1);
-  Job* job2 = Job::Create(TestJob2);
+  JobHandle job1 = Job::Create(TestJob1);
+  JobHandle job2 = Job::Create(TestJob2);
   EXPECT_FALSE(job1->MatchesType(JobType::Huge)) << "Tiny job was huge";
   EXPECT_FALSE(job1->MatchesType(JobType::Misc)) << "Tiny job was misc";
   EXPECT_TRUE(job1->MatchesType(JobType::Tiny))

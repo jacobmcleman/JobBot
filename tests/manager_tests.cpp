@@ -18,7 +18,7 @@ using namespace JobBot;
 #define UNUSED(thing) (void)thing
 
 bool jobFunc1HasRun;
-void JobFunc1(Job* job)
+void JobFunc1(JobHandle job)
 {
   UNUSED(job);
   jobFunc1HasRun = true;
@@ -26,7 +26,7 @@ void JobFunc1(Job* job)
 TinyJobFunction Job1(JobFunc1);
 
 bool jobFunc2HasRun;
-void JobFunc2(Job* job)
+void JobFunc2(JobHandle job)
 {
   UNUSED(job);
   jobFunc2HasRun = true;
@@ -39,7 +39,7 @@ TinyJobFunction Job2(JobFunc2);
   Deliberately ask the scheduler to temporarily take this thread off the CPU
 */
 bool sleepJobHasRun;
-void SleepJobFunc(Job* job)
+void SleepJobFunc(JobHandle job)
 {
   std::this_thread::sleep_for(std::chrono::milliseconds(job->GetData<int>()));
   sleepJobHasRun = true;
@@ -55,7 +55,7 @@ IOJobFunction SleepJob(SleepJobFunc);
   time off the CPU
 */
 bool floatsJobHasRun;
-void FloatsJobFunc(Job* job)
+void FloatsJobFunc(JobHandle job)
 {
   float base = job->GetData<float>();
   base       = base * base * base * 7 * base * base;
@@ -78,7 +78,7 @@ GraphicsJobFunction FloatsJob(FloatsJobFunc);
 std::atomic_int splitterLeavesReached(0);
 Manager* splitterMan;
 
-void SplitterJobFunc(Job* job);
+void SplitterJobFunc(JobHandle job);
 JobFunction SplitterJob(SplitterJobFunc);
 
 DECLARE_HUGE_JOB(TolBoiJob)
@@ -113,7 +113,7 @@ DECLARE_HUGE_JOB(TolBoiJob)
   floatsJobHasRun = true;
 }
 
-void SplitterJobFunc(Job* job)
+void SplitterJobFunc(JobHandle job)
 {
   int splitLevelsLeft = job->GetData<int>();
   if (splitLevelsLeft == 0)
@@ -145,11 +145,11 @@ TEST(ManagerTests, SingleThreadFewJobs)
 {
   Manager man(1);
 
-  Job* job1 = Job::Create(Job1);
-  Job* job2 = Job::CreateChild(Job2, job1);
-  Job* job3 = Job::CreateChild(Job2, 2, job2);
-  Job* job4 = Job::CreateChild(FloatsJob, 0.1f, job1);
-  Job* job5 = Job::CreateChild(FloatsJob, 2.4f, job1);
+  JobHandle job1 = Job::Create(Job1);
+  JobHandle job2 = Job::CreateChild(Job2, job1);
+  JobHandle job3 = Job::CreateChild(Job2, 2, job2);
+  JobHandle job4 = Job::CreateChild(FloatsJob, 0.1f, job1);
+  JobHandle job5 = Job::CreateChild(FloatsJob, 2.4f, job1);
 
   man.SubmitJob(job1);
   man.SubmitJob(job2);
@@ -184,12 +184,12 @@ TEST(ManagerTests, SingleThreadFewJobs)
 TEST(ManagerTests, SingleThreadManyJobs)
 {
   constexpr size_t jobsToMake = 1024;
-  Job* jobs[jobsToMake];
+  JobHandle jobs[jobsToMake];
 
   Manager man(1);
 
   jobs[0]        = Job::Create(Job1);
-  Job* parentJob = jobs[0];
+  JobHandle parentJob = jobs[0];
   man.SubmitJob(parentJob);
 
   for (unsigned i = 1; i < jobsToMake; ++i)
@@ -249,12 +249,12 @@ TEST(ManagerTests, MultiThreadFewJobs)
   constexpr size_t workersToUse = 4;
   Manager man(workersToUse);
 
-  Job* job1 = Job::Create(Job1);
+  JobHandle job1 = Job::Create(Job1);
   job1->SetAllowCompletion(false);
-  Job* job2 = Job::CreateChild(Job2, job1);
-  Job* job3 = Job::CreateChild(SleepJob, 2, job1);
-  Job* job4 = Job::CreateChild(FloatsJob, 0.1f, job1);
-  Job* job5 = Job::CreateChild(FloatsJob, 2.4f, job1);
+  JobHandle job2 = Job::CreateChild(Job2, job1);
+  JobHandle job3 = Job::CreateChild(SleepJob, 2, job1);
+  JobHandle job4 = Job::CreateChild(FloatsJob, 0.1f, job1);
+  JobHandle job5 = Job::CreateChild(FloatsJob, 2.4f, job1);
   job1->SetAllowCompletion(true);
 
   man.SubmitJob(job1);
@@ -281,12 +281,12 @@ TEST(ManagerTests, MultiThreadManyJobs)
 {
   constexpr size_t workersToUse = 4;
   constexpr size_t jobsToMake   = 2048 * 1;
-  Job* jobs[jobsToMake];
+  JobHandle jobs[jobsToMake];
 
   Manager man(workersToUse);
 
   jobs[0]        = Job::Create(Job1);
-  Job* parentJob = jobs[0];
+  JobHandle parentJob = jobs[0];
   parentJob->SetAllowCompletion(false);
   man.SubmitJob(parentJob);
 
@@ -318,12 +318,12 @@ TEST(ManagerTests, StressTest)
 {
   constexpr size_t workersToUse = 8;
   constexpr size_t jobsToMake   = 1 << 16;
-  Job* jobs[jobsToMake];
+  JobHandle jobs[jobsToMake];
 
   Manager man(workersToUse);
 
   jobs[0]        = Job::Create(Job1);
-  Job* parentJob = jobs[0];
+  JobHandle parentJob = jobs[0];
   parentJob->SetAllowCompletion(false);
 
   man.SubmitJob(parentJob);
@@ -377,7 +377,7 @@ TEST(ManagerTests, SingleThreadSplittingJobs)
   Manager man(1);
   splitterMan = &man;
 
-  Job* splitter = Job::Create<int>(SplitterJob, maxDepth);
+  JobHandle splitter = Job::Create<int>(SplitterJob, maxDepth);
   man.SubmitJob(splitter);
 
   man.GetThisThreadsWorker()->WorkWhileWaitingFor(splitter);
@@ -396,8 +396,8 @@ TEST(ManagerTests, SingleThreadSplittingJobs)
 
 TEST(ManagerTests, SingleThreadWillTakeAnyJob)
 {
-  Job* sleepyJob = Job::Create<int>(SleepJob, 1);
-  Job* otherJob  = Job::Create(Job1);
+  JobHandle sleepyJob = Job::Create<int>(SleepJob, 1);
+  JobHandle otherJob  = Job::Create(Job1);
   Manager man(1);
   man.SubmitJob(otherJob);
   man.SubmitJob(sleepyJob);

@@ -32,7 +32,7 @@ public:
       mode - Why the job was rejected
       job - The job that was rejected
   */
-  JobRejected(FailureType mode, Job* job);
+  JobRejected(FailureType mode, JobHandle job);
 
   /*
       Destructor
@@ -53,11 +53,11 @@ public:
   /*
       Get the job that caused this whole mess
   */
-  Job* GetJob() const;
+  JobHandle GetJob() const;
 
 private:
   FailureType mode_;
-  Job* guiltyJob_;
+  JobHandle guiltyJob_;
 };
 }
 #endif

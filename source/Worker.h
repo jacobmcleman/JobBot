@@ -73,7 +73,7 @@ public:
 
       job - The job to wait for
   */
-  void WorkWhileWaitingFor(Job* job);
+  void WorkWhileWaitingFor(JobHandle job);
 
   /*
       Steal jobs from other workers and complete them while waiting for
@@ -151,7 +151,7 @@ private:
 
       Returns some job if one was found, or nullptr otherwise
   */
-  Job* GetAJob();
+  JobHandle GetAJob();
 };
 }
 #endif

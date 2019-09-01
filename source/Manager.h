@@ -40,7 +40,7 @@ public:
   /*
       Throw a job at the workers for them to complete
   */
-  bool SubmitJob(Job* job);
+  bool SubmitJob(JobHandle job);
 
   /*
       Get a worker based on its thread ID
@@ -74,19 +74,19 @@ public:
   /*
       Add a job to the singleton manager instance
   */
-  static void RunJob(Job* job);
+  static void RunJob(JobHandle job);
 
   /*
       Tell this threads worker to work while waiting for a job
 
       Will block until job is complete
   */
-  static void WaitForJob(Job* job);
+  static void WaitForJob(JobHandle job);
 
   /*
       Request a job for a worker with these parameters
   */
-  Job* RequestJob(const Worker::Specialization& workerSpecialization);
+  JobHandle RequestJob(const Worker::Specialization& workerSpecialization);
 
   // Worker threads wait for this to tell them there are jobs
   std::condition_variable JobNotifier;
@@ -135,7 +135,7 @@ private:
   static constexpr size_t sMaxWorkerQueueLength_ = 4096;
 
   // Array of specialized queues for each type of job
-  moodycamel::ConcurrentQueue<Job*>
+  moodycamel::ConcurrentQueue<JobHandle>
       jobs[static_cast<size_t>(JobType::NumJobTypes)];
 
   /*
@@ -145,7 +145,7 @@ private:
       If successful, pointer to retrived job is placed in 'job' reference.
       If unsuccessful, job is not modified
   */
-  bool TryGetJob(JobType type, Job*& job);
+  bool TryGetJob(JobType type, JobHandle& job);
 
   /*
       Function that will be spun up on threads for each worker
@@ -156,13 +156,13 @@ private:
 /*
 Add a job to the singleton manager instance
 */
-void RunJob(Job* job);
+void Run(JobHandle job);
 
 /*
 Tell this threads worker to work while waiting for a job
 
 Will block until job is complete
 */
-void WaitForJob(Job* job);
+void WaitForJob(JobHandle job);
 }
 #endif

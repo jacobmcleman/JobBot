@@ -44,7 +44,7 @@ Job::Job()
 {
 }
 
-Job::Job(JobFunction function, Job* parent)
+Job::Job(JobFunction function, JobHandle parent)
     : jobFunc_(function.function), callbackFunc_(nullptr), unfinishedJobs_(1),
       parent_(parent), ghostJobCount_(0),
       flags_(
@@ -53,9 +53,9 @@ Job::Job(JobFunction function, Job* parent)
 {
   // If there is a parent, it now has one more job that must finish before
   // parent is done
-  if (parent_ != nullptr)
+  if (parent_.job != nullptr)
   {
-    ++(parent_->unfinishedJobs_);
+    ++(parent_.job->unfinishedJobs_);
   }
 
 #ifdef _DEBUG
@@ -74,14 +74,14 @@ Job& Job::operator=(const Job& job)
   return *this;
 }
 
-Job* Job::Create(JobFunction& function)
+JobHandle Job::Create(JobFunction& function)
 {
   return CreateChild(function, nullptr);
 }
 
-Job* Job::CreateChild(JobFunction& function, Job* parent)
+JobHandle Job::CreateChild(JobFunction& function, JobHandle parent)
 {
-  Job* nextJob;
+  Job* nextJob = nullptr;
 
   do
   {
@@ -107,7 +107,7 @@ Job* Job::CreateChild(JobFunction& function, Job* parent)
   // Ensure jobs cannot be initialized with an in-progress flag
   nextJob->flags_ = function.flags;
 
-  return nextJob;
+  return JobHandle{nextJob};
 }
 
 void Job::Run()
@@ -165,9 +165,9 @@ void Job::Finish()
       callbackFunc_(this);
     }
 
-    if (parent_ != nullptr)
+    if (parent_.job != nullptr)
     {
-      parent_->Finish();
+      parent_.job->Finish();
     }
 
     flags_ &= ~JOB_FLAG_MASK_STATUS_IN_PROGRESS;

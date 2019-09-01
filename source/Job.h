@@ -39,7 +39,7 @@ class Job;
 /*
     Define JobFunction pointers to make declarations of Jobs much tidier
 */
-typedef void (*JobFunctionPointer)(Job*);
+typedef void (*JobFunctionPointer)(JobHandle);
 
 struct JobFunction
 {
@@ -49,6 +49,17 @@ struct JobFunction
   unsigned char flags         = 0;
 };
 
+class JobHandle
+{
+  public:
+    JobHandle(JobHandle& aHandle): job(aHandle.job) {}
+
+    friend class Job;
+  private:
+    JobHandle(Job* aJob): job(aJob) {}
+    Job const* job;
+};
+
 #pragma pack(push, 1)
 class Job
 {
@@ -56,12 +67,12 @@ public:
   /*
       Allocate memory for a job, giving it a function
   */
-  static Job* Create(JobFunction& function);
+  static JobHandle Create(JobFunction& function);
 
   /*
       Allocate memory for a job, giving it a function and a parent
   */
-  static Job* CreateChild(JobFunction& function, Job* parent);
+  static JobHandle CreateChild(JobFunction& function, JobHandle parent);
 
   /*
       Allocate memory for a job, giving it a function and some data.
@@ -75,9 +86,9 @@ public:
       too large to fit within a job itself.
   */
   template <typename T>
-  static Job* Create(JobFunction& function, const T& data);
+  static JobHandle Create(JobFunction& function, const T& data);
   template <typename T>
-  static Job* CreateChild(JobFunction& function, const T& data, Job* parent);
+  static JobHandle CreateChild(JobFunction& function, const T& data, JobHandle parent);
 
   /*
       Execute this job
@@ -134,7 +145,7 @@ public:
   static constexpr size_t TARGET_JOB_SIZE = 128;
   // Amount of data within a job
   static constexpr size_t PAYLOAD_SIZE =
-      2 * sizeof(JobFunctionPointer) + sizeof(std::atomic_int) + sizeof(Job*) +
+      2 * sizeof(JobFunctionPointer) + sizeof(std::atomic_int) + sizeof(JobHandle) +
       sizeof(std::atomic_char) + sizeof(unsigned char);
   // Amount of bytes to add in order to reach target size
   static constexpr size_t PADDING_BYTES = TARGET_JOB_SIZE - PAYLOAD_SIZE;
@@ -180,7 +191,7 @@ private:
   std::atomic_int unfinishedJobs_;
 
   // Parent of this job
-  Job* parent_;
+  JobHandle parent_;
 
   // Number of other parts of code that need this job to remain 'alive'
   std::atomic_char ghostJobCount_;
@@ -221,7 +232,7 @@ private:
       function - the function to run as this job
       parent - this job's parent (optional)
   */
-  Job(JobFunction function, Job* parent = nullptr);
+  Job(JobFunction function, JobHandle parent = nullptr);
 
   /*
       Assignment operator for the job systems 'memory manager' to use
@@ -268,17 +279,17 @@ struct ImportantJobFunction : public JobFunction
 };
 
 template <typename T>
-inline Job* Job::Create(JobFunction& function, const T& data)
+inline JobHandle Job::Create(JobFunction& function, const T& data)
 {
-  Job* job = Create(function);
+  JobHandle job = Create(function);
   job->SetData<T>(data);
   return job;
 }
 
 template <typename T>
-inline Job* Job::CreateChild(JobFunction& function, const T& data, Job* parent)
+inline JobHandle Job::CreateChild(JobFunction& function, const T& data, JobHandle parent)
 {
-  Job* job = CreateChild(function, parent);
+  JobHandle job = CreateChild(function, parent);
   job->SetData<T>(data);
   return job;
 }
@@ -301,36 +312,37 @@ template <typename T> inline T& Job::GetData()
   // Get the data from the padding bytes
   return *reinterpret_cast<T*>(padding_);
 }
+
 }
 
 #define DECLARE_JOB(JobName)                                                   \
-  void JobName##Func(JobBot::Job* job);                                        \
+  void JobName##Func(JobBot::JobHandle job);                                        \
   JobBot::JobFunction JobName(JobName##Func);                                  \
-  void JobName##Func(JobBot::Job* job)
+  void JobName##Func(JobBot::JobHandle job)
 
 #define DECLARE_IO_JOB(JobName)                                                \
-  void JobName##Func(JobBot::Job* job);                                        \
+  void JobName##Func(JobBot::JobHandle job);                                        \
   JobBot::IOJobFunction JobName(JobName##Func);                                \
-  void JobName##Func(JobBot::Job* job)
+  void JobName##Func(JobBot::JobHandle job)
 
 #define DECLARE_TINY_JOB(JobName)                                              \
-  void JobName##Func(JobBot::Job* job);                                        \
+  void JobName##Func(JobBot::JobHandle job);                                        \
   JobBot::TinyJobFunction JobName(JobName##Func);                              \
-  void JobName##Func(JobBot::Job* job)
+  void JobName##Func(JobBot::JobHandle job)
 
 #define DECLARE_HUGE_JOB(JobName)                                              \
-  void JobName##Func(JobBot::Job* job);                                        \
+  void JobName##Func(JobBot::JobHandle job);                                        \
   JobBot::HugeJobFunction JobName(JobName##Func);                              \
-  void JobName##Func(JobBot::Job* job)
+  void JobName##Func(JobBot::JobHandle job)
 
 #define DECLARE_GRAPHICS_JOB(JobName)                                          \
-  void JobName##Func(JobBot::Job* job);                                        \
+  void JobName##Func(JobBot::JobHandle job);                                        \
   JobBot::GraphicsJobFunction JobName(JobName##Func);                          \
-  void JobName##Func(JobBot::Job* job)
+  void JobName##Func(JobBot::JobHandle job)
 
 #define DECLARE_IMPORTANT_JOB(JobName)                                         \
-  void JobName##Func(JobBot::Job* job);                                        \
+  void JobName##Func(JobBot::JobHandle job);                                        \
   JobBot::ImportantJobFunction JobName(JobName##Func);                         \
-  void JobName##Func(JobBot::Job* job)
+  void JobName##Func(JobBot::JobHandle job)
 
 #endif

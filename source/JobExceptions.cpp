@@ -10,7 +10,7 @@
 
 namespace JobBot
 {
-JobRejected::JobRejected(FailureType mode, Job* job)
+JobRejected::JobRejected(FailureType mode, JobHandle job)
     : mode_(mode), guiltyJob_(job)
 {
   if (guiltyJob_ != nullptr)
@@ -48,5 +48,5 @@ const char* JobRejected::what() const throw()
 
 JobRejected::FailureType JobRejected::GetFailureMode() const { return mode_; }
 
-Job* JobRejected::GetJob() const { return guiltyJob_; }
+JobHandle JobRejected::GetJob() const { return guiltyJob_; }
 }

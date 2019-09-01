@@ -16,6 +16,16 @@
 
 namespace JobBot
 {
+/*
+ * Create a job that will run jobs A and B in parallel
+ */
+Job operator&(Job& jobA, Job& jobB);
+
+/*
+ * Create a job that will run jobs A and then B (in sequence)
+ */
+Job operator|(Job& jobA, Job& jobB);
+
 class Utilities
 {
 public:
@@ -33,7 +43,7 @@ public:
       NOT THREAD SAFE
   */
   template <typename T>
-  using ParallelForJobFunction = void (*)(Job* job, T* dataChunk,
+  using ParallelForJobFunction = void (*)(JobHandle job, T* dataChunk,
                                           size_t chunkSize);
 
   /*
@@ -44,7 +54,7 @@ public:
       A job is created to handle every *chunkSize* elements
   */
   template <typename T>
-  static Job* ParallelForJob(Manager* manager,
+  static JobHandle ParallelForJob(Manager* manager,
                              ParallelForJobFunction<T> function, T* data,
                              size_t size, size_t chunkSize);
 
@@ -75,17 +85,17 @@ private:
       Job function to handle the actual splitting off of all
       the jobs
   */
-  template <typename T> static void ParallelForSplitterFunction(Job* job);
+  template <typename T> static void ParallelForSplitterFunction(JobHandle job);
 
   /*
       Job function that hands of the call to the tidier interface
       of the users ParallelForJobFunction
   */
-  template <typename T> static void ParallelForJob(Job* job);
+  template <typename T> static void ParallelForJob(JobHandle job);
 };
 
 template <typename T>
-inline Job* Utilities::ParallelForJob(Manager* manager,
+inline JobHandle Utilities::ParallelForJob(Manager* manager,
                                       ParallelForJobFunction<T> function,
                                       T* data, size_t size, size_t chunkSize)
 {
@@ -96,7 +106,7 @@ inline Job* Utilities::ParallelForJob(Manager* manager,
 }
 
 template <typename T>
-inline void Utilities::ParallelForSplitterFunction(Job* job)
+inline void Utilities::ParallelForSplitterFunction(JobHandle job)
 {
   ParallelForSplitterData<T>& jobData =
       job->GetData<ParallelForSplitterData<T>>();
@@ -117,7 +127,7 @@ inline void Utilities::ParallelForSplitterFunction(Job* job)
   job->SetAllowCompletion(true);
 }
 
-template <typename T> inline void Utilities::ParallelForJob(Job* job)
+template <typename T> inline void Utilities::ParallelForJob(JobHandle job)
 {
   ParallelForJobData<T>& data = job->GetData<ParallelForJobData<T>>();
 

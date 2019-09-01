@@ -40,7 +40,7 @@ Worker::Specialization Worker::Specialization::RealTime = {
     {JobType::Tiny, JobType::Misc, JobType::Graphics, JobType::Null,
      JobType::Null}};
 
-void Worker::WorkWhileWaitingFor(Job* aWaitJob)
+void Worker::WorkWhileWaitingFor(JobHandle aWaitJob)
 {
   bool wasWorking = isWorking_;
   isWorking_      = true;
@@ -107,7 +107,7 @@ void Worker::DoWork()
 void Worker::DoSingleJob()
 {
   static std::mutex waitMutex;
-  Job* job = GetAJob();
+  JobHandle job = GetAJob();
 
 #ifdef _DEBUG
   if (job != nullptr && job->GetUnfinishedJobCount() > 0)
@@ -133,5 +133,5 @@ void Worker::DoSingleJob()
   }
 }
 
-Job* Worker::GetAJob() { return manager_->RequestJob(workerSpecialization_); }
+JobHandle Worker::GetAJob() { return manager_->RequestJob(workerSpecialization_); }
 }

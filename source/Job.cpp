@@ -38,6 +38,14 @@ constexpr unsigned char JOB_FLAG_MASK_STATUS_IN_PROGRESS =
 constexpr unsigned char JOB_FLAG_MASK_STATUS_CANCELLED =
     JOB_FLAG_MASK_STATUS_IN_PROGRESS << 1;
 
+JobHandle::JobHandle(const JobHandle& aHandle): job(aHandle.job) {}
+
+JobHandle& JobHandle::operator=(const JobHandle& aHandle) {job = aHandle.job; return *this; }
+
+bool JobHandle::isNull() const { return job == nullptr; }
+void JobHandle::BlockCompletion() { job->SetAllowCompletion(false); }
+void JobHandle::UnblockCompletion() { job->SetAllowCompletion(true); }
+
 Job::Job()
     : jobFunc_(nullptr), callbackFunc_(nullptr), unfinishedJobs_(-1),
       parent_(nullptr), ghostJobCount_(0), flags_(0)

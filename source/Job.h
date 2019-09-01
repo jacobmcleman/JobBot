@@ -32,9 +32,10 @@ enum struct JobType
 };
 
 /*
-    Forward declaration so that JobFunction typedef can happen
+    Forward declaration so that JobFunction typedefs can happen
 */
 class Job;
+class JobHandle;
 
 /*
     Define JobFunction pointers to make declarations of Jobs much tidier
@@ -52,12 +53,18 @@ struct JobFunction
 class JobHandle
 {
   public:
-    JobHandle(JobHandle& aHandle): job(aHandle.job) {}
+    JobHandle(const JobHandle& aHandle);
+
+    JobHandle& operator=(const JobHandle& aHandle);
+
+    bool isNull() const;
+    void BlockCompletion();
+    void UnblockCompletion();
 
     friend class Job;
   private:
     JobHandle(Job* aJob): job(aJob) {}
-    Job const* job;
+    Job* job;
 };
 
 #pragma pack(push, 1)
@@ -232,7 +239,7 @@ private:
       function - the function to run as this job
       parent - this job's parent (optional)
   */
-  Job(JobFunction function, JobHandle parent = nullptr);
+  Job(JobFunction function, JobHandle parent = JobHandle(nullptr));
 
   /*
       Assignment operator for the job systems 'memory manager' to use
@@ -282,7 +289,7 @@ template <typename T>
 inline JobHandle Job::Create(JobFunction& function, const T& data)
 {
   JobHandle job = Create(function);
-  job->SetData<T>(data);
+  job.job->SetData<T>(data);
   return job;
 }
 
@@ -290,7 +297,7 @@ template <typename T>
 inline JobHandle Job::CreateChild(JobFunction& function, const T& data, JobHandle parent)
 {
   JobHandle job = CreateChild(function, parent);
-  job->SetData<T>(data);
+  job.job->SetData<T>(data);
   return job;
 }
 

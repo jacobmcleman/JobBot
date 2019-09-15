@@ -183,53 +183,35 @@ TEST(ManagerTests, SingleThreadFewJobs)
 TEST(ManagerTests, SingleThreadManyJobs)
 {
   constexpr size_t jobsToMake = 1024;
-  JobHandle jobs[jobsToMake];
+  std::vector<JobHandle> jobs;
 
   Manager man(1);
 
-  jobs[0]        = Job::Create(Job1);
+  jobs.push_back(Job::Create(Job1));
   JobHandle parentJob = jobs[0];
   man.SubmitJob(parentJob);
 
   for (unsigned i = 1; i < jobsToMake; ++i)
   {
-    jobs[i] = Job::CreateChild<float>(
+    jobs.push_back(Job::CreateChild<float>(
         FloatsJob, (((float)std::rand()) / ((float)std::rand() + 1)),
-        parentJob);
+        parentJob));
     man.SubmitJob(jobs[i]);
 
-    EXPECT_FALSE(jobs[i]->IsFinished()) << "Job has been prematurely executed";
+    EXPECT_FALSE(jobs[i].is.Finished()) << "Job has been prematurely executed";
   }
 
   man.GetThisThreadsWorker()->WorkWhileWaitingFor(parentJob);
 
   for (unsigned i = 0; i < jobsToMake; ++i)
   {
-    EXPECT_TRUE(jobs[i]->IsFinished()) << "Job has not been completed";
+    EXPECT_TRUE(jobs[i].is.Finished()) << "Job has not been completed";
   }
 
 #ifdef _DEBUG
   EXPECT_EQ((size_t)0, Job::GetUnfinishedJobCount())
       << "Some jobs were not finished";
 #endif
-}
-
-TEST(ManagerTests, SubmitNullJob)
-{
-  Manager man(1);
-
-  bool exceptionThrown = false;
-
-  try
-  {
-    man.SubmitJob(nullptr);
-  }
-  catch (JobRejected& e)
-  {
-    exceptionThrown = true;
-  }
-
-  EXPECT_TRUE(exceptionThrown) << "Exception was not thrown";
 }
 
 /*
@@ -249,12 +231,13 @@ TEST(ManagerTests, MultiThreadFewJobs)
   Manager man(workersToUse);
 
   JobHandle job1 = Job::Create(Job1);
-  job1->SetAllowCompletion(false);
+
+  job1.BlockCompletion();
   JobHandle job2 = Job::CreateChild(Job2, job1);
   JobHandle job3 = Job::CreateChild(SleepJob, 2, job1);
   JobHandle job4 = Job::CreateChild(FloatsJob, 0.1f, job1);
   JobHandle job5 = Job::CreateChild(FloatsJob, 2.4f, job1);
-  job1->SetAllowCompletion(true);
+  job1.UnblockCompletion();
 
   man.SubmitJob(job1);
   man.SubmitJob(job2);
@@ -264,11 +247,11 @@ TEST(ManagerTests, MultiThreadFewJobs)
 
   man.GetThisThreadsWorker()->WorkWhileWaitingFor(job1);
 
-  EXPECT_TRUE(job1->IsFinished()) << "Job1 has not been completed";
-  EXPECT_TRUE(job2->IsFinished()) << "Job2 has not been completed";
-  EXPECT_TRUE(job3->IsFinished()) << "Job3 has not been completed";
-  EXPECT_TRUE(job4->IsFinished()) << "Job4 has not been completed";
-  EXPECT_TRUE(job5->IsFinished()) << "Job5 has not been completed";
+  EXPECT_TRUE(job1.is.Finished()) << "Job1 has not been completed";
+  EXPECT_TRUE(job2.is.Finished()) << "Job2 has not been completed";
+  EXPECT_TRUE(job3.is.Finished()) << "Job3 has not been completed";
+  EXPECT_TRUE(job4.is.Finished()) << "Job4 has not been completed";
+  EXPECT_TRUE(job5.is.Finished()) << "Job5 has not been completed";
 
 #ifdef _DEBUG
   EXPECT_EQ((size_t)0, Job::GetUnfinishedJobCount())
@@ -280,13 +263,13 @@ TEST(ManagerTests, MultiThreadManyJobs)
 {
   constexpr size_t workersToUse = 4;
   constexpr size_t jobsToMake   = 2048 * 1;
-  JobHandle jobs[jobsToMake];
+  std::vector<JobHandle> jobs;
 
   Manager man(workersToUse);
 
-  jobs[0]        = Job::Create(Job1);
+  jobs.push_back(Job::Create(Job1));
   JobHandle parentJob = jobs[0];
-  parentJob->SetAllowCompletion(false);
+  parentJob.BlockCompletion();
   man.SubmitJob(parentJob);
 
   for (unsigned i = 1; i < jobsToMake; ++i)
@@ -296,13 +279,13 @@ TEST(ManagerTests, MultiThreadManyJobs)
         parentJob);
     man.SubmitJob(jobs[i]);
   }
-  parentJob->SetAllowCompletion(true);
+  parentJob.UnblockCompletion();
 
   man.GetThisThreadsWorker()->WorkWhileWaitingFor(parentJob);
 
   for (unsigned i = 0; i < jobsToMake; ++i)
   {
-    EXPECT_TRUE(jobs[i]->IsFinished()) << "Job has not been completed";
+    EXPECT_TRUE(jobs[i].is.Finished()) << "Job has not been completed";
   }
 
 #ifdef _DEBUG
@@ -317,13 +300,13 @@ TEST(ManagerTests, StressTest)
 {
   constexpr size_t workersToUse = 8;
   constexpr size_t jobsToMake   = 1 << 16;
-  JobHandle jobs[jobsToMake];
+  std::vector<JobHandle> jobs;
 
   Manager man(workersToUse);
 
-  jobs[0]        = Job::Create(Job1);
+  jobs.push_back(Job::Create(Job1));
   JobHandle parentJob = jobs[0];
-  parentJob->SetAllowCompletion(false);
+  parentJob.BlockCompletion();
 
   man.SubmitJob(parentJob);
 
@@ -351,13 +334,13 @@ TEST(ManagerTests, StressTest)
       }
     } while (failed);
   }
-  parentJob->SetAllowCompletion(true);
+  parentJob.UnblockCompletion();
 
   man.GetThisThreadsWorker()->WorkWhileWaitingFor(parentJob);
 
   for (unsigned i = 0; i < jobsToMake; ++i)
   {
-    EXPECT_TRUE(jobs[i]->IsFinished()) << "Job has not been completed";
+    EXPECT_TRUE(jobs[i].is.Finished()) << "Job has not been completed";
   }
 
 #ifdef _DEBUG
@@ -404,6 +387,6 @@ TEST(ManagerTests, SingleThreadWillTakeAnyJob)
   man.GetThisThreadsWorker()->WorkWhileWaitingFor(otherJob);
   man.GetThisThreadsWorker()->WorkWhileWaitingFor(sleepyJob);
 
-  EXPECT_TRUE(sleepyJob->IsFinished());
-  EXPECT_TRUE(otherJob->IsFinished());
+  EXPECT_TRUE(sleepyJob.is.Finished());
+  EXPECT_TRUE(otherJob.is.Finished());
 }

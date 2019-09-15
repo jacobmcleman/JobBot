@@ -82,6 +82,9 @@ class JobHandle
     JobHandle& operator=(const JobHandle& aHandle);
 
     BlockingProxy Block();
+    void BlockCompletion();
+    void UnblockCompletion();
+
     Properties is;
     bool Run();
     bool SetCallback(JobFunction func);
@@ -102,9 +105,6 @@ class JobHandle
   private:
     JobHandle(Job* aJob): is(*this), job(aJob) {}
     Job* job;
-
-    void BlockCompletion();
-    void UnblockCompletion();
 };
 
 #pragma pack(push, 1)

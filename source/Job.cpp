@@ -38,13 +38,53 @@ constexpr unsigned char JOB_FLAG_MASK_STATUS_IN_PROGRESS =
 constexpr unsigned char JOB_FLAG_MASK_STATUS_CANCELLED =
     JOB_FLAG_MASK_STATUS_IN_PROGRESS << 1;
 
-JobHandle::JobHandle(const JobHandle& aHandle): job(aHandle.job) {}
+JobHandle::BlockingProxy::BlockingProxy(JobHandle& aHandle): handle_(aHandle) 
+{
+  handle_.BlockCompletion();
+}
+
+JobHandle::BlockingProxy::~BlockingProxy() 
+{
+  handle_.UnblockCompletion();
+}
+
+JobHandle::JobHandle(const JobHandle& aHandle): is(*this), job(aHandle.job) {}
 
 JobHandle& JobHandle::operator=(const JobHandle& aHandle) {job = aHandle.job; return *this; }
 
-bool JobHandle::isNull() const { return job == nullptr; }
+bool JobHandle::Properties::Null() const { return handle_.job == nullptr; }
+bool JobHandle::Properties::Finished() const { return handle_.job->IsFinished(); }
+bool JobHandle::Properties::Running() const { return handle_.job->InProgress(); }
+bool JobHandle::Properties::Type(JobType type) const { return handle_.job->MatchesType(type); }
 void JobHandle::BlockCompletion() { job->SetAllowCompletion(false); }
 void JobHandle::UnblockCompletion() { job->SetAllowCompletion(true); }
+JobHandle::BlockingProxy JobHandle::Block() { return BlockingProxy(*this); }
+
+bool JobHandle::SetCallback(JobFunction func) 
+{ 
+  if (!is.Null() && !is.Finished())
+  {
+    job->SetCallback(func);
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
+bool JobHandle::Run() 
+{
+  if (!is.Null() && !is.Finished())
+  {
+    job->Run();
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
 
 Job::Job()
     : jobFunc_(nullptr), callbackFunc_(nullptr), unfinishedJobs_(-1),

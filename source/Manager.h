@@ -145,7 +145,7 @@ private:
       If successful, pointer to retrived job is placed in 'job' reference.
       If unsuccessful, job is not modified
   */
-  bool TryGetJob(JobType type, JobHandle& job);
+  bool TryGetJob(JobType type, JobHandle* job);
 
   /*
       Function that will be spun up on threads for each worker

@@ -13,7 +13,7 @@ namespace JobBot
 JobRejected::JobRejected(FailureType mode, JobHandle job)
     : mode_(mode), guiltyJob_(job)
 {
-  if (!guiltyJob_.isNull())
+  if (!guiltyJob_.is.Null())
   {
     guiltyJob_.BlockCompletion();
   }
@@ -21,7 +21,7 @@ JobRejected::JobRejected(FailureType mode, JobHandle job)
 
 JobRejected::~JobRejected()
 {
-  if (!guiltyJob_.isNull())
+  if (!guiltyJob_.is.Null())
   {
     guiltyJob_.UnblockCompletion();
   }

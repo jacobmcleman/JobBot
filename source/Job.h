@@ -52,19 +52,59 @@ struct JobFunction
 
 class JobHandle
 {
+  private:
+    class BlockingProxy 
+    {
+      public:
+        BlockingProxy(JobHandle& handle);
+        ~BlockingProxy();
+      private:
+        JobHandle& handle_;
+    };
+
+    class Properties
+    {
+      public:
+        Properties(const JobHandle& handle): handle_(handle){}
+
+        bool Null() const;
+        bool Finished() const;
+        bool Running() const;
+        bool Type(JobType type) const;
+
+      private:
+        const JobHandle& handle_;
+    };
+
   public:
     JobHandle(const JobHandle& aHandle);
 
     JobHandle& operator=(const JobHandle& aHandle);
 
-    bool isNull() const;
-    void BlockCompletion();
-    void UnblockCompletion();
+    BlockingProxy Block();
+    Properties is;
+    bool Run();
+    bool SetCallback(JobFunction func);
+    
+    /*
+      Retrive the associated data that is stored with this job.
+      This data cannot be type checked when it is accessed, so
+      when using make sure that the used type matches the expected type.
+
+      Recommend using a struct for multiple arguments. This should
+      be smaller than PADDING_BYTES (checked with a static assert).
+    */
+    template <typename T> T& GetData();
 
     friend class Job;
+    friend class Manager;
+    friend class JobRejected;
   private:
-    JobHandle(Job* aJob): job(aJob) {}
+    JobHandle(Job* aJob): is(*this), job(aJob) {}
     Job* job;
+
+    void BlockCompletion();
+    void UnblockCompletion();
 };
 
 #pragma pack(push, 1)
@@ -318,6 +358,11 @@ template <typename T> inline T& Job::GetData()
 
   // Get the data from the padding bytes
   return *reinterpret_cast<T*>(padding_);
+}
+
+template <typename T> inline T& JobHandle::GetData()
+{
+  return job->GetData<T>();
 }
 
 }

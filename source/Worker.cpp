@@ -45,14 +45,13 @@ void Worker::WorkWhileWaitingFor(JobHandle aWaitJob)
   bool wasWorking = isWorking_;
   isWorking_      = true;
 
-  aWaitJob->SetAllowCompletion(false);
-
-  while (!aWaitJob->IsFinished())
-  {
-    DoSingleJob();
+  { 
+    auto block = aWaitJob.Block();
+    while (!aWaitJob.is.Finished())
+    {
+      DoSingleJob();
+    }
   }
-
-  aWaitJob->SetAllowCompletion(true);
 
   isWorking_ = wasWorking;
 }
@@ -110,12 +109,12 @@ void Worker::DoSingleJob()
   JobHandle job = GetAJob();
 
 #ifdef _DEBUG
-  if (job != nullptr && job->GetUnfinishedJobCount() > 0)
+  if (!job.is.Null() && Job::GetUnfinishedJobCount() > 0)
 #else
-  if (job != nullptr)
+  if (!job.is.Null())
 #endif
   {
-    job->Run();
+    job.Run();
   }
   else
   {

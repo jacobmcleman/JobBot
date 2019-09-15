@@ -30,13 +30,13 @@ void TestJobFunc2(JobHandle job)
 HugeJobFunction TestJob2(TestJobFunc2);
 
 bool testFunc3GotData;
-void TestJobFunc3(JobHandle job) { testFunc3GotData = (job->GetData<int>() == 4); }
+void TestJobFunc3(JobHandle job) { testFunc3GotData = (job.GetData<int>() == 4); }
 IOJobFunction TestJob3(TestJobFunc3);
 
 bool testFunc4GotData;
 void TestJobFunc4(JobHandle job)
 {
-  testFunc4GotData = (job->GetData<float>() == 25.12f);
+  testFunc4GotData = (job.GetData<float>() == 25.12f);
 }
 GraphicsJobFunction TestJob4(TestJobFunc4);
 
@@ -50,8 +50,8 @@ TEST(JobTests, Create)
 {
   JobHandle job = Job::Create(TestJob1);
 
-  EXPECT_FALSE(job->IsFinished()) << "Job has not been created correctly";
-  EXPECT_FALSE(job->InProgress()) << "Job has not been created correctly";
+  EXPECT_FALSE(job.is.Finished()) << "Job has not been created correctly";
+  EXPECT_FALSE(job.is.Running()) << "Job has not been created correctly";
 }
 
 TEST(JobTests, RunJob)
@@ -60,16 +60,16 @@ TEST(JobTests, RunJob)
   JobHandle job        = Job::Create(TestJob1);
 
   EXPECT_FALSE(testFunc1HasRun) << "Job has been prematurely executed";
-  EXPECT_FALSE(job->IsFinished())
+  EXPECT_FALSE(job.is.Finished())
       << "Job is marked as finished before it has run";
 
-  job->Run();
+  EXPECT_TRUE(job.Run()) << "Job was unable to run";
 
   EXPECT_TRUE(testFunc1HasRun)
       << "Job has been run but has not executed job code";
-  EXPECT_TRUE(job->IsFinished())
+  EXPECT_TRUE(job.is.Finished())
       << "Job has been run but is not marked as finished";
-  EXPECT_FALSE(job->InProgress())
+  EXPECT_FALSE(job.is.Running())
       << "Job is finished but still marked as in progress";
 }
 
@@ -84,33 +84,33 @@ TEST(JobTests, Parent)
 
   // Make sure that nothing has prematurely fired
   EXPECT_FALSE(testFunc1HasRun) << "Job1 has been prematurely executed";
-  EXPECT_FALSE(job1->IsFinished())
+  EXPECT_FALSE(job1.is.Finished())
       << "Job1 is marked as finished before it has run";
   EXPECT_FALSE(testFunc2HasRun) << "Job2 has been prematurely executed";
-  EXPECT_FALSE(job2->IsFinished())
+  EXPECT_FALSE(job2.is.Finished())
       << "Job2 is marked as finished before it has run";
 
   // Run job1 (the parent)
-  job1->Run();
+  EXPECT_TRUE(job1.Run()) << "Job was unable to run";
 
   // Job 1 has now run, but should not be marked done because it has a child
   // that has not finished
   EXPECT_TRUE(testFunc1HasRun) << "Job1 has not run correctly";
-  EXPECT_FALSE(job1->IsFinished())
+  EXPECT_FALSE(job1.is.Finished())
       << "Job1 is marked as finished before all of its children have finished";
   EXPECT_FALSE(testFunc2HasRun) << "Job2 has been prematurely executed";
-  EXPECT_FALSE(job2->IsFinished())
+  EXPECT_FALSE(job2.is.Finished())
       << "Job2 is marked as finished before it has run";
 
   // Run job2 (the child)
-  job2->Run();
+  EXPECT_TRUE(job2.Run()) << "Job was unable to run";
 
   // Make sure all jobs are now correctly marked as completed
   EXPECT_TRUE(testFunc1HasRun) << "Job1 has not run correctly";
-  EXPECT_TRUE(job1->IsFinished())
+  EXPECT_TRUE(job1.is.Finished())
       << "Job1 is not marked as finished even though all child jobs are done";
   EXPECT_TRUE(testFunc2HasRun) << "Job2 has not run correctly";
-  EXPECT_TRUE(job2->IsFinished())
+  EXPECT_TRUE(job2.is.Finished())
       << "Job2 has been run but is not marked as finished";
 }
 
@@ -121,18 +121,18 @@ TEST(JobTests, Callback)
 
   // Create job1 with a callback function
   JobHandle job = Job::Create(TestJob1);
-  job->SetCallback(TestJob2);
+  EXPECT_TRUE(job.SetCallback(TestJob2)) << "Unable to set callback on job";
 
   EXPECT_FALSE(testFunc1HasRun) << "Job has been prematurely executed";
-  EXPECT_FALSE(job->IsFinished())
+  EXPECT_FALSE(job.is.Finished())
       << "Job is marked as finished before it has run";
   EXPECT_FALSE(testFunc2HasRun) << "Callback has been prematurely executed";
 
-  job->Run();
+  EXPECT_TRUE(job.Run()) << "Job was unable to run";
 
   EXPECT_TRUE(testFunc1HasRun)
       << "Job has been run but has not executed job code";
-  EXPECT_TRUE(job->IsFinished())
+  EXPECT_TRUE(job.is.Finished())
       << "Job has been run but is not marked as finished";
   EXPECT_TRUE(testFunc2HasRun)
       << "Job has been run but has not executed callback code";
@@ -146,14 +146,14 @@ TEST(JobTests, Data1)
 
   EXPECT_FALSE(testFunc3GotData)
       << "Function somehow already got the data even though it hasn't run yet";
-  EXPECT_FALSE(job->IsFinished())
+  EXPECT_FALSE(job.is.Finished())
       << "Job is marked as finished before it has run";
 
-  job->Run();
+  EXPECT_TRUE(job.Run()) << "Job was unable to run";
 
   EXPECT_TRUE(testFunc3GotData)
       << "Function did not correctly recieve the data";
-  EXPECT_TRUE(job->IsFinished()) << "Job is not marked as finished";
+  EXPECT_TRUE(job.is.Finished()) << "Job is not marked as finished";
 }
 
 TEST(JobTests, Data2)
@@ -164,25 +164,24 @@ TEST(JobTests, Data2)
 
   EXPECT_FALSE(testFunc4GotData)
       << "Function somehow already got the data even though it hasn't run yet";
-  EXPECT_FALSE(job->IsFinished())
+  EXPECT_FALSE(job.is.Finished())
       << "Job is marked as finished before it has run";
 
-  job->Run();
+  EXPECT_TRUE(job.Run()) << "Job was unable to run";
 
   EXPECT_TRUE(testFunc4GotData) << "Function recieved wrong data";
-  EXPECT_TRUE(job->IsFinished()) << "Job is not marked as finished";
+  EXPECT_TRUE(job.is.Finished()) << "Job is not marked as finished";
 }
 
 TEST(JobTests, JobTypeChecks)
 {
   JobHandle job1 = Job::Create(TestJob1);
   JobHandle job2 = Job::Create(TestJob2);
-  EXPECT_FALSE(job1->MatchesType(JobType::Huge)) << "Tiny job was huge";
-  EXPECT_FALSE(job1->MatchesType(JobType::Misc)) << "Tiny job was misc";
-  EXPECT_TRUE(job1->MatchesType(JobType::Tiny))
-      << "Tiny job was not a tiny job";
+  EXPECT_FALSE(job1.is.Type(JobType::Huge)) << "Tiny job was huge";
+  EXPECT_FALSE(job1.is.Type(JobType::Misc)) << "Tiny job was misc";
+  EXPECT_TRUE(job1.is.Type(JobType::Tiny)) << "Tiny job was not a tiny job";
 
-  EXPECT_TRUE(job2->MatchesType(JobType::Huge)) << "Huge job was not huge";
-  EXPECT_FALSE(job2->MatchesType(JobType::Misc)) << "Huge job was misc";
-  EXPECT_FALSE(job2->MatchesType(JobType::Tiny)) << "Huge job was tiny";
+  EXPECT_TRUE(job2.is.Type(JobType::Huge)) << "Huge job was not huge";
+  EXPECT_FALSE(job2.is.Type(JobType::Misc)) << "Huge job was misc";
+  EXPECT_FALSE(job2.is.Type(JobType::Tiny)) << "Huge job was tiny";
 }

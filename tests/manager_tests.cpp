@@ -41,7 +41,7 @@ TinyJobFunction Job2(JobFunc2);
 bool sleepJobHasRun;
 void SleepJobFunc(JobHandle job)
 {
-  std::this_thread::sleep_for(std::chrono::milliseconds(job->GetData<int>()));
+  std::this_thread::sleep_for(std::chrono::milliseconds(job.GetData<int>()));
   sleepJobHasRun = true;
 }
 IOJobFunction SleepJob(SleepJobFunc);
@@ -57,7 +57,7 @@ IOJobFunction SleepJob(SleepJobFunc);
 bool floatsJobHasRun;
 void FloatsJobFunc(JobHandle job)
 {
-  float base = job->GetData<float>();
+  float base = job.GetData<float>();
   base       = base * base * base * 7 * base * base;
   std::pow(base, 2.7f);
   std::pow(base, 1.2f);
@@ -83,7 +83,7 @@ JobFunction SplitterJob(SplitterJobFunc);
 
 DECLARE_HUGE_JOB(TolBoiJob)
 {
-  float base = job->GetData<float>();
+  float base = job.GetData<float>();
   base       = base * base * base * 7 * base * base;
   std::pow(base, 2.7f);
   std::pow(base, 1.2f);
@@ -115,19 +115,18 @@ DECLARE_HUGE_JOB(TolBoiJob)
 
 void SplitterJobFunc(JobHandle job)
 {
-  int splitLevelsLeft = job->GetData<int>();
+  int splitLevelsLeft = job.GetData<int>();
   if (splitLevelsLeft == 0)
   {
     ++splitterLeavesReached;
   }
   else
   {
-    job->SetAllowCompletion(false);
+    auto lock = job.Block();
     splitterMan->SubmitJob(
         Job::CreateChild<int>(SplitterJob, splitLevelsLeft - 1, job));
     splitterMan->SubmitJob(
         Job::CreateChild<int>(SplitterJob, splitLevelsLeft - 1, job));
-    job->SetAllowCompletion(true);
   }
 }
 
@@ -157,19 +156,19 @@ TEST(ManagerTests, SingleThreadFewJobs)
   man.SubmitJob(job4);
   man.SubmitJob(job5);
 
-  EXPECT_FALSE(job1->IsFinished()) << "Job has been prematurely executed";
-  EXPECT_FALSE(job2->IsFinished()) << "Job has been prematurely executed";
-  EXPECT_FALSE(job3->IsFinished()) << "Job has been prematurely executed";
-  EXPECT_FALSE(job4->IsFinished()) << "Job has been prematurely executed";
-  EXPECT_FALSE(job5->IsFinished()) << "Job has been prematurely executed";
+  EXPECT_FALSE(job1.is.Finished()) << "Job has been prematurely executed";
+  EXPECT_FALSE(job2.is.Finished()) << "Job has been prematurely executed";
+  EXPECT_FALSE(job3.is.Finished()) << "Job has been prematurely executed";
+  EXPECT_FALSE(job4.is.Finished()) << "Job has been prematurely executed";
+  EXPECT_FALSE(job5.is.Finished()) << "Job has been prematurely executed";
 
   man.GetThisThreadsWorker()->WorkWhileWaitingFor(job1);
 
-  EXPECT_TRUE(job1->IsFinished()) << "Job has not been completed";
-  EXPECT_TRUE(job2->IsFinished()) << "Job has not been completed";
-  EXPECT_TRUE(job3->IsFinished()) << "Job has not been completed";
-  EXPECT_TRUE(job4->IsFinished()) << "Job has not been completed";
-  EXPECT_TRUE(job5->IsFinished()) << "Job has not been completed";
+  EXPECT_TRUE(job1.is.Finished()) << "Job has not been completed";
+  EXPECT_TRUE(job2.is.Finished()) << "Job has not been completed";
+  EXPECT_TRUE(job3.is.Finished()) << "Job has not been completed";
+  EXPECT_TRUE(job4.is.Finished()) << "Job has not been completed";
+  EXPECT_TRUE(job5.is.Finished()) << "Job has not been completed";
 
   EXPECT_TRUE(jobFunc1HasRun) << "Job has not been executed";
   EXPECT_TRUE(jobFunc2HasRun) << "Job has not been executed";

@@ -28,20 +28,20 @@ Manager::~Manager() { StopWorkers(); }
 
 bool Manager::SubmitJob(JobHandle job)
 {
-  if (job == nullptr)
+  if (!job.is.Null())
   {
     throw JobRejected(JobRejected::FailureType::NullJob, job);
   }
 
-  if (job->MatchesType(JobType::Important))
+  if (job.is.Type(JobType::Important))
     jobs[static_cast<size_t>(JobType::Important)].enqueue(job);
-  else if (job->MatchesType(JobType::IO))
+  else if (job.is.Type(JobType::IO))
     jobs[static_cast<size_t>(JobType::IO)].enqueue(job);
-  else if (job->MatchesType(JobType::Huge))
+  else if (job.is.Type(JobType::Huge))
     jobs[static_cast<size_t>(JobType::Huge)].enqueue(job);
-  else if (job->MatchesType(JobType::Graphics))
+  else if (job.is.Type(JobType::Graphics))
     jobs[static_cast<size_t>(JobType::Graphics)].enqueue(job);
-  else if (job->MatchesType(JobType::Tiny))
+  else if (job.is.Type(JobType::Tiny))
     jobs[static_cast<size_t>(JobType::Tiny)].enqueue(job);
   else
     jobs[static_cast<size_t>(JobType::Misc)].enqueue(job);
@@ -99,11 +99,11 @@ void Manager::WaitForJob(JobHandle job)
 
 JobHandle Manager::RequestJob(const Worker::Specialization& workerSpecialization)
 {
-  JobHandle job;
+  JobHandle* job = nullptr;
 
   if (TryGetJob(JobType::Important, job))
   {
-    return job;
+    return *job;
   }
 
   for (unsigned i = 0; i < static_cast<size_t>(JobType::NumJobTypes) - 1; ++i)
@@ -111,16 +111,16 @@ JobHandle Manager::RequestJob(const Worker::Specialization& workerSpecialization
     JobType toTry = workerSpecialization.priorities[i];
     if (toTry != JobType::Null && TryGetJob(toTry, job))
     {
-      return job;
+      return *job;
     }
   }
 
   return nullptr;
 }
 
-bool Manager::TryGetJob(JobType type, JobHandle& job)
+bool Manager::TryGetJob(JobType type, JobHandle* job)
 {
-  return jobs[static_cast<size_t>(type)].try_dequeue(job);
+  return jobs[static_cast<size_t>(type)].try_dequeue(*job);
 }
 
 void Manager::StartNewWorker(Worker::Mode mode)

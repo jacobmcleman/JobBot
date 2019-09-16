@@ -65,15 +65,19 @@ class JobHandle
     class Properties
     {
       public:
-        Properties(const JobHandle& handle): handle_(handle){}
+        Properties(const JobHandle& handle, Properties& negative, bool negated): not(negative), handle_(handle), negated_(negated) {}
 
         bool Null() const;
         bool Finished() const;
         bool Running() const;
         bool Type(JobType type) const;
 
+        Properties& not;
+
       private:
         const JobHandle& handle_;
+        const bool negated_;
+        bool negator(bool toNeg) const;
     };
 
   public:
@@ -103,7 +107,8 @@ class JobHandle
     friend class Manager;
     friend class JobRejected;
   private:
-    JobHandle(Job* aJob): is(*this), job(aJob) {}
+    JobHandle(Job* aJob): is(*this, isNot_, false), isNot_(*this, is, true), job(aJob) {}
+    Properties isNot_;
     Job* job;
 };
 

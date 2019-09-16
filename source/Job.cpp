@@ -48,14 +48,16 @@ JobHandle::BlockingProxy::~BlockingProxy()
   handle_.UnblockCompletion();
 }
 
-JobHandle::JobHandle(const JobHandle& aHandle): is(*this), job(aHandle.job) {}
+JobHandle::JobHandle(const JobHandle& aHandle): is(*this, isNot_, false), isNot_(*this, is, true), job(aHandle.job) {}
 
 JobHandle& JobHandle::operator=(const JobHandle& aHandle) {job = aHandle.job; return *this; }
 
-bool JobHandle::Properties::Null() const { return handle_.job == nullptr; }
-bool JobHandle::Properties::Finished() const { return handle_.job->IsFinished(); }
-bool JobHandle::Properties::Running() const { return handle_.job->InProgress(); }
-bool JobHandle::Properties::Type(JobType type) const { return handle_.job->MatchesType(type); }
+bool JobHandle::Properties::negator(bool toNeg) const { return negated_ ? !toNeg : toNeg; }
+bool JobHandle::Properties::Null() const { return negator(handle_.job == nullptr); }
+bool JobHandle::Properties::Finished() const { return negator(handle_.job->IsFinished()); }
+bool JobHandle::Properties::Running() const { return negator(handle_.job->InProgress()); }
+bool JobHandle::Properties::Type(JobType type) const { return negator(handle_.job->MatchesType(type)); }
+
 void JobHandle::BlockCompletion() { job->SetAllowCompletion(false); }
 void JobHandle::UnblockCompletion() { job->SetAllowCompletion(true); }
 JobHandle::BlockingProxy JobHandle::Block() { return BlockingProxy(*this); }

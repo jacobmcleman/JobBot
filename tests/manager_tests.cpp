@@ -150,11 +150,13 @@ TEST(ManagerTests, SingleThreadFewJobs)
   JobHandle job4 = Job::CreateChild(FloatsJob, 0.1f, job1);
   JobHandle job5 = Job::CreateChild(FloatsJob, 2.4f, job1);
 
-  man.SubmitJob(job1);
-  man.SubmitJob(job2);
-  man.SubmitJob(job3);
-  man.SubmitJob(job4);
-  man.SubmitJob(job5);
+  EXPECT_TRUE(man.SubmitJob(job1)) << "Failed to submit job";
+  EXPECT_TRUE(man.SubmitJob(job2)) << "Failed to submit job";
+  EXPECT_TRUE(man.SubmitJob(job3)) << "Failed to submit job";
+  EXPECT_TRUE(man.SubmitJob(job4)) << "Failed to submit job";
+  EXPECT_TRUE(man.SubmitJob(job5)) << "Failed to submit job";
+
+  EXPECT_TRUE(false) << "Jobs submitted";
 
   EXPECT_FALSE(job1.is.Finished()) << "Job has been prematurely executed";
   EXPECT_FALSE(job2.is.Finished()) << "Job has been prematurely executed";
@@ -162,7 +164,11 @@ TEST(ManagerTests, SingleThreadFewJobs)
   EXPECT_FALSE(job4.is.Finished()) << "Job has been prematurely executed";
   EXPECT_FALSE(job5.is.Finished()) << "Job has been prematurely executed";
 
+  EXPECT_TRUE(false) << "Jobs checked";
+
   man.GetThisThreadsWorker()->WorkWhileWaitingFor(job1);
+
+  EXPECT_TRUE(false) << "Jobs theoretically completed";
 
   EXPECT_TRUE(job1.is.Finished()) << "Job has not been completed";
   EXPECT_TRUE(job2.is.Finished()) << "Job has not been completed";
@@ -173,6 +179,7 @@ TEST(ManagerTests, SingleThreadFewJobs)
   EXPECT_TRUE(jobFunc1HasRun) << "Job has not been executed";
   EXPECT_TRUE(jobFunc2HasRun) << "Job has not been executed";
   EXPECT_TRUE(floatsJobHasRun) << "Job has not been executed";
+
 
 #ifdef _DEBUG
   EXPECT_EQ((size_t)0, Job::GetUnfinishedJobCount())

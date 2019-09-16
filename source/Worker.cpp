@@ -45,9 +45,9 @@ void Worker::WorkWhileWaitingFor(JobHandle aWaitJob)
   bool wasWorking = isWorking_;
   isWorking_      = true;
 
-  { 
+  if (aWaitJob.is.not.Null() && aWaitJob.is.not.Finished()) { 
     auto block = aWaitJob.Block();
-    while (!aWaitJob.is.Finished())
+    while (aWaitJob.is.not.Finished())
     {
       DoSingleJob();
     }

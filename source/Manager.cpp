@@ -28,7 +28,7 @@ Manager::~Manager() { StopWorkers(); }
 
 bool Manager::SubmitJob(JobHandle job)
 {
-  if (!job.is.Null())
+  if (job.is.Null())
   {
     throw JobRejected(JobRejected::FailureType::NullJob, job);
   }
